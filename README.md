@@ -111,3 +111,43 @@ This repository includes a Workers entry point (worker.js) and a Wrangler config
 6. Test https://YOUR-WORKER.workers.dev/api/health. It should return ok: true and primusConfigured: true after both secrets are saved.
 
 The Cloudflare Worker path is an initial deployment adapter. The Primus Core SDK uses a WASM algorithm backend plus Node-oriented WebSocket/native-addon code; successful static build and Worker deployment do not by themselves prove that live Primus attestation works on Workers. Run a real test with a dedicated Binance read-only API key before treating the verification flow as operational. The exact attested balance fields are disclosed in this MVP; it is not a threshold-only zero-knowledge proof.
+
+
+## On-chain wallet balance checks
+
+The app also supports read-only EVM balance lookups for a public wallet address. A browser wallet connection is optional; users can paste an address instead. The browser connection requests only the account list (eth_requestAccounts). The app does not request a message signature, transaction, token approval, seed phrase, or private key.
+
+Supported network and asset combinations:
+
+| Network | Native asset | ERC-20 assets |
+| --- | --- | --- |
+| Ethereum Mainnet | ETH | USDC, USDT |
+| Base Mainnet | ETH | USDC |
+| BNB Smart Chain | BNB | USDT (Binance-Peg) |
+
+The API uses public JSON-RPC endpoints and reads the native balance with eth_getBalance or token balance with ERC-20 balanceOf. It records a block number and queries the balance at that block, then compares the exact integer amount with the requested minimum. Decimal conversion uses integer arithmetic, not floating point.
+
+The response is a **public RPC balance lookup**, not a Primus attestation or cryptographic proof. It does not prove that the person submitting the address controls that address; anyone can look up a public address. It also trusts the configured RPC endpoint to return accurate data. The explorer link is included so users can independently inspect the address.
+
+### Wallet API
+
+POST /api/wallet/balance
+
+Request body:
+
+{
+  "address": "0x0000000000000000000000000000000000000001",
+  "network": "ethereum",
+  "asset": "ETH",
+  "minimum": "0.1"
+}
+
+Allowed network keys are ethereum, base, and bsc. Supported assets depend on the selected network; unsupported combinations are rejected.
+
+### Wallet network references
+
+- [Ethereum JSON-RPC API](https://ethereum.org/developers/docs/apis/json-rpc/) documents eth_getBalance and block-tagged state queries.
+- [Base JSON-RPC documentation](https://docs.base.org/base-chain/api-reference/ethereum-json-rpc-api/eth_chainId) identifies Base Mainnet chain ID 8453; the public endpoint used here is https://mainnet.base.org.
+- [BNB Smart Chain RPC endpoints](https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/) list the BSC Mainnet endpoint and chain ID 56.
+- [Tether supported protocols](https://tether.to/en/supported-protocols/) documents the Ethereum USDT contract. The BSC asset is explicitly labelled Binance-Peg USDT.
+- [Base USDC contract](https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913) and [Ethereum USDC contract](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) are fixed in the network registry.
