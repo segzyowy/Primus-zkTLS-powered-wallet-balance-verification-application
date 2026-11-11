@@ -97,3 +97,17 @@ npm run build
 - [Primus zkTLS integration guide](https://github.com/primus-labs/skills/tree/main/primus-zktls-core-sdk)
 - [Primus Binance Spot asset balance example](https://github.com/primus-labs/skills/blob/main/binance-verifiable-skills/scripts/demo-binance-spot-asset-balance.mjs)
 - [Binance Spot account endpoint](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints)
+
+
+## Deploy to Cloudflare Workers
+
+This repository includes a Workers entry point (worker.js) and a Wrangler configuration (wrangler.jsonc). The Worker serves the Vite dist/ assets and handles /api/* requests.
+
+1. In Cloudflare, open Workers & Pages and create a Worker connected to this GitHub repository.
+2. Use production branch main and root directory /.
+3. Set the Workers Build command to npm run build. Keep the deploy command at its default, npx wrangler deploy.
+4. Keep Protect with Cloudflare Access disabled for the public application. Preview builds are optional; enabling them is useful for testing non-production branches.
+5. After the first deployment, open the Worker Settings > Variables and Secrets and add ZKTLS_APP_ID and ZKTLS_APP_SECRET as encrypted secrets. Do not add these as plain text build variables, and never commit them to GitHub.
+6. Test https://YOUR-WORKER.workers.dev/api/health. It should return ok: true and primusConfigured: true after both secrets are saved.
+
+The Cloudflare Worker path is an initial deployment adapter. The Primus Core SDK uses a WASM algorithm backend plus Node-oriented WebSocket/native-addon code; successful static build and Worker deployment do not by themselves prove that live Primus attestation works on Workers. Run a real test with a dedicated Binance read-only API key before treating the verification flow as operational. The exact attested balance fields are disclosed in this MVP; it is not a threshold-only zero-knowledge proof.
