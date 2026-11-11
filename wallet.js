@@ -79,6 +79,7 @@ export async function getOnchainBalance({ address, network, asset, minimum, rpc 
   if (symbol !== chain.nativeSymbol && !token) throw new Error(symbol + " is not supported on " + chain.name + ".");
   const decimals = token ? token.decimals : 18;
   const minimumUnits = decimalToUnits(minimum, decimals);
+  if (minimumUnits <= 0n) throw new Error("Minimum balance must be greater than zero.");
 
   const [actualChainHex, blockHex] = await Promise.all([
     rpc(chain.rpc, "eth_chainId", []),
