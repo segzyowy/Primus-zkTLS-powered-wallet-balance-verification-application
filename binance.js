@@ -3,10 +3,25 @@ import crypto from "node:crypto";
 const BINANCE_BASE = "https://api.binance.com";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-function decimalToUnits(value, scale = 18) {
+export function decimalToUnits(value, scale = 18) {
   const [whole, fraction = ""] = String(value).split(".");
+  if (fraction.length > scale || !/^\d+$/.test(whole) || !/^\d*$/.test(fraction)) {
+    throw new Error("Invalid decimal precision.");
+  }
   return BigInt(whole) * (10n ** BigInt(scale)) +
     BigInt((fraction + "0".repeat(scale)).slice(0, scale));
+}
+
+export function buildBalanceResponseResolves(rowIndex) {
+  return [
+    { keyName: "asset", parseType: "json", parsePath: `$.balances[${rowIndex}].asset` },
+    { keyName: "free", parseType: "json", parsePath: `$.balances[${rowIndex}].free` },
+    { keyName: "locked", parseType: "json", parsePath: `$.balances[${rowIndex}].locked` }
+  ];
+}
+
+export function calculateThreshold(free, locked, minimum) {
+  return decimalToUnits(free) + decimalToUnits(locked) >= decimalToUnits(minimum);
 }
 
 function signQuery(params, secret) {
@@ -39,10 +54,14 @@ async function getBinanceAccount(apiKey, apiSecret) {
   return body;
 }
 
-export async function createBinanceBalanceProof({ apiKey, apiSecret, asset, minimum, appId, appSecret }) {
+export async function createBinanceBalanceProof({
+  apiKey, apiSecret, asset, minimum, appId, appSecret,
+  fetchAccount = getBinanceAccount,
+  loadPrimus = () => import("@primuslabs/zktls-core-sdk")
+}) {
   // First request locates the selected asset row so the Primus response rules
   // disclose only that row's asset/free/locked fields.
-  const account = await getBinanceAccount(apiKey, apiSecret);
+  const account = await fetchAccount(apiKey, apiSecret);
   const rowIndex = account.balances.findIndex(row => row.asset === asset);
   if (rowIndex < 0) {
     const e = new Error("Asset was not present in the Binance account response.");
@@ -65,13 +84,9 @@ export async function createBinanceBalanceProof({ apiKey, apiSecret, asset, mini
     body: ""
   };
 
-  const responseResolves = [
-    { keyName: "asset", parseType: "json", parsePath: `$.balances[${rowIndex}].asset` },
-    { keyName: "free", parseType: "json", parsePath: `$.balances[${rowIndex}].free` },
-    { keyName: "locked", parseType: "json", parsePath: `$.balances[${rowIndex}].locked` }
-  ];
+  const responseResolves = buildBalanceResponseResolves(rowIndex);
 
-  const { PrimusCoreTLS } = await import("@primuslabs/zktls-core-sdk");
+  const { PrimusCoreTLS } = await loadPrimus();
   const zkTLS = new PrimusCoreTLS();
   await zkTLS.init(appId, appSecret, "auto");
   const attRequest = zkTLS.generateRequestParams(request, responseResolves, ZERO_ADDRESS);
@@ -109,9 +124,7 @@ export async function createBinanceBalanceProof({ apiKey, apiSecret, asset, mini
     throw new Error("Attested response did not contain the expected asset balance fields.");
   }
 
-  const totalUnits = decimalToUnits(free) + decimalToUnits(locked);
-  const minimumUnits = decimalToUnits(minimum);
-  const passes = totalUnits >= minimumUnits;
+  const passes = calculateThreshold(free, locked, minimum);
 
   return {
     provider: "Binance",
@@ -124,9 +137,9 @@ export async function createBinanceBalanceProof({ apiKey, apiSecret, asset, mini
     locked,
     thresholdResult: passes ? "PASS" : "FAIL",
     attestedAt: attestation.timestamp ?? Date.now(),
+    attestorCount: Array.isArray(attestation.attestors) ? attestation.attestors.length : 0,
     proofType: "partial",
     verifiesWhat: "The selected asset, free balance and locked balance fields were extracted from an attested Binance HTTPS account response and the Primus signature passed local verification. The application compared free + locked against the requested minimum.",
     doesNotVerify: "This MVP does not hide the raw balance values inside the attestation, prove ownership of funds beyond the authenticated Binance account response, cover other account products such as Earn/Margin/Futures, or guarantee the balance remains unchanged after the snapshot.",
-    attestation
   };
 }

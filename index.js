@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import crypto from "node:crypto";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createBinanceBalanceProof } from "./binance.js";
 
 const app = express();
@@ -11,14 +13,9 @@ const port = Number(process.env.PORT || 8787);
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",").map(s => s.trim()).filter(Boolean);
 
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error("Origin not allowed"));
-  }
-}));
+if (allowedOrigins.length) {
+  app.use(cors({ origin: allowedOrigins }));
+}
 app.use(express.json({ limit: "32kb" }));
 app.use("/api/", rateLimit({ windowMs: 60_000, limit: 8, standardHeaders: "draft-7", legacyHeaders: false }));
 
@@ -59,13 +56,22 @@ app.post("/api/verify/binance", async (req, res) => {
     // Credentials are request-scoped and are never written to disk or returned.
     return res.json({ requestId, ...result });
   } catch (error) {
-    // Do not log request bodies, API credentials, signed URLs or full upstream payloads.
-    console.error(`[${requestId}] verification failed:`, error?.message || "Unknown error");
+    // Keep request bodies, credentials, signatures and upstream payloads out of logs.
+    console.error(`[${requestId}] verification failed`);
     const message = error?.publicMessage || "Verification failed. Check your API key permissions, Primus setup and try again.";
     return res.status(502).json({ requestId, error: message });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Proof of Balance API listening on http://localhost:${port}`);
+app.use(express.static("dist"));
+app.use((error, _req, res, _next) => {
+  if (res.headersSent) return;
+  const status = error?.type === "entity.too.large" ? 413 : 400;
+  res.status(status).json({ error: status === 413 ? "Request is too large." : "Invalid request." });
 });
+
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  app.listen(port, () => console.log(`Proof of Balance API listening on http://localhost:${port}`));
+}
+
+export default app;

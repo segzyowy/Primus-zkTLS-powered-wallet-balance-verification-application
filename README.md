@@ -1,50 +1,33 @@
 # Proof of Balance
 
-A community prototype that creates a Primus zkTLS attestation for one selected Binance Spot asset balance and compares the attested `free + locked` amount with a user-selected threshold.
+A small web app that creates a Primus zkTLS attestation for one Binance Spot asset balance, locally checks the returned Primus signature, and compares the attested `free + locked` amount with a minimum threshold.
 
-## Current scope
+## What this app verifies
 
-- Binance Spot account balance proof using `GET https://api.binance.com/api/v3/account`.
-- Primus `@primuslabs/zktls-core-sdk` attestation generation.
-- Local Primus signature verification before returning a result.
-- Asset-specific response extraction (`asset`, `free`, `locked`).
-- PASS/FAIL threshold calculation using decimal-safe integer arithmetic.
-- React/Vite dashboard and Express API.
-- User-provided Binance credentials are request-scoped; the app does not save them or log request bodies.
+- Binance Spot `GET /api/v3/account` response fields for one selected asset: `asset`, `free`, and `locked`.
+- The Primus attestation signature using the SDK's local verifier.
+- The threshold comparison using decimal-safe integer arithmetic.
 
-**OKX:** The current Primus `onchainos-verifiable-skills` wallet balance examples concern on-chain wallet portfolio endpoints, not a centralized OKX exchange-account balance endpoint. This project therefore does not pretend that CEX OKX account balance verification is implemented. Add an OKX exchange connector only after an official supported endpoint and matching Primus proof flow are validated.
+This is a **partial, point-in-time attestation**, not a threshold-only zero-knowledge proof. The exact balance is included in the attested data and shown in the result. The app does not cover Earn, Margin, Futures, subaccounts, or later changes to the balance. The local SDK signature check is not the same as verifying the attestation against a particular on-chain contract.
 
-## Important proof boundary
-
-This MVP attests the selected Binance response fields `asset`, `free`, and `locked`. It then compares `free + locked` against the requested threshold after local signature verification.
-
-The returned attestation contains those balance fields. Therefore, this version does **not** cryptographically hide the exact balance or prove a zero-knowledge threshold-only statement. The result is a locally verified signed attestation plus an application-level threshold comparison. Do not market it as a threshold-only ZK proof.
-
-The proof is a point-in-time Spot account response. It does not include Earn, Margin, Futures, subaccounts, or other account products. It does not guarantee that the balance remains unchanged after the attested timestamp.
+The app makes a direct Binance request to locate the selected asset's array index, then makes a second signed request through Primus. The attested response is authoritative for the displayed balance; the direct request is used only to determine the JSONPath. If the balance list changes between requests, the requested asset check prevents another row from being accepted.
 
 ## Requirements
 
-- Node.js 20 or newer recommended
+- Node.js 20 or newer
 - npm
 - Primus Developer Hub app ID and app secret
-- Binance API key with **read-only** permission; trading and withdrawal permissions must remain disabled
+- A dedicated Binance API key with read-only/account-reading permission
 
-Create Primus credentials at https://dev.primuslabs.xyz/.
+Create Primus app credentials at <https://dev.primuslabs.xyz/>.
 
 ## Run locally
 
 ```bash
 npm install
-cp .env.example .env
 ```
 
-On Windows PowerShell, use:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Edit `.env` and set:
+Copy `.env.example` to `.env` and set the server-side Primus credentials:
 
 ```env
 ZKTLS_APP_ID=your_primus_app_id
@@ -52,42 +35,43 @@ ZKTLS_APP_SECRET=your_primus_app_secret
 PORT=8787
 ```
 
-Start the app:
+Start the frontend and API together:
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:5173.
+Open <http://localhost:5173>.
 
-## Binance API key safety
-
-1. Create a dedicated API key in Binance API Management.
-2. Enable read-only/account reading permission only.
-3. Disable trading, withdrawals, transfers and all permissions not needed.
-4. Configure IP restrictions where possible.
-5. Never paste your API secret into GitHub, a source file, a screenshot or a public issue.
-6. The browser sends the key and secret to the backend for the current verification request. The server does not persist them, but the server operator can technically access them while processing. Run this app on a server you control and trust. Use HTTPS for any remote deployment.
-7. The app's `.env` contains the Primus app secret and must never be committed.
-
-## Production build
+For a production build and server:
 
 ```bash
 npm run build
 npm start
 ```
 
-The Express server currently exposes the API. For production, configure a reverse proxy to serve the `dist/` folder and forward `/api` to the Express process, or deploy the Vite frontend and API behind the same HTTPS origin. Configure `ALLOWED_ORIGINS` if using a separate frontend origin.
+The Express server serves `dist/` and the `/api` endpoints from the same origin.
+
+## Credential handling
+
+- The Primus app ID and app secret stay in the backend `.env` file. The browser never receives them.
+- The user enters a Binance API key and secret in the browser. They are sent to the backend for the current request and are not written to disk or logged. The form clears them after the request completes.
+- The backend response deliberately omits the raw Primus attestation because its embedded signed request contains the Binance API key header and signed URL. The response returns only the verification summary and selected balance fields.
+- The server operator can access Binance credentials while processing a request. Run the app only on a server you control and trust, and use HTTPS for remote deployments.
+- Never enable trading, withdrawals, transfers, or permissions the proof does not need. Enable Binance IP restrictions where possible.
+- `.env` and `.env.*` are ignored by Git; `.env.example` contains blank placeholders only.
+
+If hosting the frontend on a separate origin, set `ALLOWED_ORIGINS` to a comma-separated list of exact allowed origins. Keep this empty for same-origin use.
 
 ## API
 
 ### `GET /api/health`
 
-Reports app health and whether Primus credentials are configured. Does not expose credentials.
+Returns app health and whether Primus credentials are configured. It never returns credentials.
 
 ### `POST /api/verify/binance`
 
-JSON body:
+Request body:
 
 ```json
 {
@@ -98,35 +82,18 @@ JSON body:
 }
 ```
 
-Returns the threshold result, extracted fields, proof boundary, and Primus attestation when successful.
+The response includes the selected fields, PASS/FAIL comparison, attestation time, local verification status, and the proof boundary. It does not return the raw attestation or signed Binance request.
 
-## GitHub upload
-
-1. Download and extract the ZIP.
-2. Create a new empty GitHub repository.
-3. Open a terminal in the extracted `proof-of-balance` folder.
-4. Run:
+## Development checks
 
 ```bash
-git init
-git add .
-git commit -m "Build Proof of Balance MVP"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/proof-of-balance.git
-git push -u origin main
+npm test
+npm run build
 ```
 
-Replace `YOUR-USERNAME` with your GitHub username. Do not add `.env` or credentials to the repository.
+## References
 
-## Official references
-
-- Primus Skills repository: https://github.com/primus-labs/skills
-- Binance verifiable skills: https://github.com/primus-labs/skills/tree/main/binance-verifiable-skills
-- Primus zkTLS Core SDK guide: https://github.com/primus-labs/skills/tree/main/primus-zktls-core-sdk
-- Primus documentation: https://docs.primuslabs.xyz/
-- Primus Developer Hub: https://dev.primuslabs.xyz/
-- Binance API documentation: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints
-
-## Prototype status
-
-This is a source-code MVP scaffold. It has not been run against live Binance credentials or a live Primus project from this environment. Install dependencies, configure your own credentials, and test with a dedicated read-only account before public deployment.
+- [Primus zkTLS Core SDK](https://github.com/primus-labs/zktls-core-sdk)
+- [Primus zkTLS integration guide](https://github.com/primus-labs/skills/tree/main/primus-zktls-core-sdk)
+- [Primus Binance Spot asset balance example](https://github.com/primus-labs/skills/blob/main/binance-verifiable-skills/scripts/demo-binance-spot-asset-balance.mjs)
+- [Binance Spot account endpoint](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints)
