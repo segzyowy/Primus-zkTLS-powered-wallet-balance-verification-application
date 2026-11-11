@@ -42,7 +42,7 @@ export function isEvmAddress(value) {
 export function decimalToUnits(value, decimals) {
   const text = String(value ?? "").trim();
   if (!Number.isInteger(decimals) || decimals < 0 || decimals > 36) throw new Error("Invalid token decimals.");
-  if (!/^(?:0|[1-9]\\d*)(?:\\.\\d+)?$/.test(text)) throw new Error("Enter a valid positive decimal amount.");
+  if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(text)) throw new Error("Enter a valid positive decimal amount.");
   const [whole, fraction = ""] = text.split(".");
   if (fraction.length > decimals) throw new Error("The minimum amount has too many decimal places for this asset.");
   return BigInt(whole) * (10n ** BigInt(decimals)) + BigInt((fraction + "0".repeat(decimals)).slice(0, decimals) || "0");
@@ -53,7 +53,7 @@ export function formatUnits(units, decimals) {
   const base = 10n ** BigInt(decimals);
   const whole = (value / base).toString();
   const fraction = decimals ? (value % base).toString().padStart(decimals, "0").replace(/0+$/, "") : "";
-  return whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",") + (fraction ? "." + fraction : "");
+  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (fraction ? "." + fraction : "");
 }
 
 async function rpcCall(endpoint, method, params) {
