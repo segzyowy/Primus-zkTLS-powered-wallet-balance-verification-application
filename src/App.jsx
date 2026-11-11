@@ -244,7 +244,7 @@ export default function App() {
       <div className="eyebrow"><span className="pulse"/> PUBLIC DATA, VERIFIABLE CHECKS</div>
       <h1>Your balance.<br/><span>Your proof.</span></h1>
       <p className="intro">Check an on-chain wallet address or verify a Binance Spot balance. Choose a method and review exactly what the result confirms.</p>
-      <div className="trust-row"><span><ShieldCheck size={16}/> Read-only checks</span><i/><span>No transactions</span><i/><span>Point-in-time snapshot</span></div>
+      <div className="trust-row"><span><ShieldCheck size={16}/> Read-only balance lookup</span><i/><span>No asset transfers</span><i/><span>Point-in-time snapshot</span></div>
     </section>
 
     <div className="method-switch" role="tablist" aria-label="Verification method">
@@ -265,7 +265,7 @@ export default function App() {
         </div>
         <label htmlFor="walletMinimum">Minimum balance ({walletForm.asset})</label>
         <input id="walletMinimum" name="minimum" inputMode="decimal" value={walletForm.minimum} onChange={updateWallet} placeholder="Enter minimum balance" required/>
-        <div className="privacy-note"><LockKeyhole size={16}/><p>Read-only lookup. We never ask for a seed phrase or private key, and we do not request signatures or transactions. A public address can be checked by anyone.</p></div>
+        <div className="privacy-note"><LockKeyhole size={16}/><p>This balance lookup is read-only: no seed phrase, private key, signature or transaction is needed. The separate Primus panel below submits an on-chain task and requires gas on Base.</p></div>
         {walletError && <div className="error-box" role="alert">{walletError}</div>}
         <button className="primary-btn" disabled={walletBusy}>{walletBusy ? <><span className="spinner"/> Checking on-chain balance…</> : <>Check wallet balance <ArrowUpRight size={17}/></>}</button>
         <p className="key-tip">This checks the selected network only. A balance lookup does not prove you control the address.</p>
