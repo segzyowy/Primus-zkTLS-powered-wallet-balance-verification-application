@@ -36,3 +36,15 @@ test("verification refuses requests without server-side Primus credentials", asy
     assert.equal(JSON.stringify(data).includes("placeholder"), false);
   });
 });
+
+test("wallet balance endpoint rejects invalid addresses before querying an RPC", async () => {
+  await withServer(async base => {
+    const response = await fetch(base + "/api/wallet/balance", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ address: "not-a-wallet", network: "ethereum", asset: "ETH", minimum: "0.1" })
+    });
+    const data = await response.json();
+    assert.equal(response.status, 400);
+    assert.match(data.error, /valid EVM wallet address/);
+  });
+});
