@@ -151,3 +151,23 @@ Allowed network keys are ethereum, base, and bsc. Supported assets depend on the
 - [BNB Smart Chain RPC endpoints](https://docs.bnbchain.org/bnb-smart-chain/developers/json_rpc/json-rpc-endpoint/) list the BSC Mainnet endpoint and chain ID 56.
 - [Tether supported protocols](https://tether.to/en/supported-protocols/) documents the Ethereum USDT contract. The BSC asset is explicitly labelled Binance-Peg USDT.
 - [Base USDC contract](https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913) and [Ethereum USDC contract](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) are fixed in the network registry.
+
+
+## Primus Network zkTLS from a connected wallet
+
+The wallet panel includes a separate Primus Network DApp attestation flow using `@primuslabs/network-js-sdk`.
+
+1. Connect a browser wallet in the Wallet tab.
+2. Paste a Template ID created in the Primus Developer Hub (the app does not invent a template ID).
+3. Choose Base Sepolia for development or Base Mainnet for production.
+4. Select **Verify with Primus zkTLS**. The SDK submits a task on-chain, runs the browser-extension attestation, then polls for the confirmed result.
+5. The connected wallet must hold ETH for the task-submission transaction, and the Primus browser extension (version 0.3.44 or later) must be installed.
+
+The optional `VITE_PRIMUS_WALLET_TEMPLATE_ID` variable prefills the template field; it is a public template identifier, not a secret. It may also be entered directly in the app.
+
+**Important proof boundary:** the existing wallet balance feature remains a public on-chain RPC balance lookup. Primus Network zkTLS attests off-chain web data defined by the selected template; it does not automatically turn an on-chain ETH/token balance read into a zkTLS proof. Use a template whose source and fields match the claim being displayed. The Primus attestation result is shown separately from the on-chain balance lookup.
+
+Official references:
+- [Primus Network SDK demo](https://github.com/primus-labs/zktls-demo/tree/main/network-sdk-example)
+- [Primus DApp SDK guide](https://github.com/primus-labs/skills/tree/main/primus-network-js-sdk-dapp)
+- [Primus Developer Hub](https://dev.primuslabs.xyz/)
