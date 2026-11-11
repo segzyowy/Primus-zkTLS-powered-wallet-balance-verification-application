@@ -5,18 +5,19 @@ const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(d
   headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers },
 });
 
-function corsHeaders(request, env) {
+function corsHeaders(request, env, requestUrl) {
   const origin = request.headers.get("Origin");
-  const allowed = (env.ALLOWED_ORIGINS || "").split(",").map(v => v.trim()).filter(Boolean);
   if (!origin) return {};
-  if (!allowed.length || allowed.includes(origin)) return { "access-control-allow-origin": origin, "vary": "Origin" };
-  return {};
+  const configured = (env.ALLOWED_ORIGINS || "").split(",").map(v => v.trim()).filter(Boolean);
+  const allowed = new Set([requestUrl.origin, ...configured]);
+  return allowed.has(origin) ? { "access-control-allow-origin": origin, "vary": "Origin" } : null;
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const cors = corsHeaders(request, env);
+    const cors = corsHeaders(request, env, url);
+    if (cors === null) return json({ error: "Origin not allowed." }, 403);
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
       return new Response(null, { status: 204, headers: { ...cors, "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "Content-Type", "access-control-max-age": "86400" } });
     }
@@ -46,7 +47,7 @@ export default {
       const cleanAsset = String(asset || "").trim().toUpperCase();
       if (!/^[A-Z0-9]{2,20}$/.test(cleanAsset)) return json({ error: "Enter a valid asset symbol, such as USDT or BTC." }, 400, cors);
       const cleanMinimum = String(minimum ?? "").trim();
-      if (!/^(?:0|[1-9]\\d*)(?:\\.\\d{1,18})?$/.test(cleanMinimum) || Number(cleanMinimum) <= 0) return json({ error: "Minimum balance must be a positive decimal amount (up to 18 decimal places)." }, 400, cors);
+      if (!/^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/.test(cleanMinimum) || Number(cleanMinimum) <= 0) return json({ error: "Minimum balance must be a positive decimal amount (up to 18 decimal places)." }, 400, cors);
       try {
         const result = await createBinanceBalanceProof({ apiKey, apiSecret, asset: cleanAsset, minimum: cleanMinimum, appId: env.ZKTLS_APP_ID, appSecret: env.ZKTLS_APP_SECRET });
         return json({ requestId: crypto.randomUUID(), ...result }, 200, cors);
