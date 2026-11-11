@@ -44,6 +44,7 @@ export default function App() {
       return;
     }
     setWalletForm(current => ({ ...current, [name]: value }));
+    if (name === "address") setWalletConnected(false);
     setWalletResult(null);
   }
 
