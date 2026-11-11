@@ -1,4 +1,5 @@
 import { createBinanceBalanceProof } from "./binance.js";
+import { getOnchainBalance } from "./wallet.js";
 
 const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
   status,
@@ -23,6 +24,29 @@ export default {
     }
     if (url.pathname === "/api/health" && request.method === "GET") {
       return json({ ok: true, app: "proof-of-balance", primusConfigured: Boolean(env.ZKTLS_APP_ID && env.ZKTLS_APP_SECRET) }, 200, cors);
+    }
+
+    if (url.pathname === "/api/wallet/balance" && request.method === "POST") {
+      let body;
+      try {
+        const length = Number(request.headers.get("content-length") || 0);
+        if (length > 12_288) return json({ error: "Request is too large." }, 413, cors);
+        body = await request.json();
+      } catch { return json({ error: "Invalid JSON request." }, 400, cors); }
+
+      try {
+        const result = await getOnchainBalance({
+          address: body?.address,
+          network: body?.network,
+          asset: body?.asset,
+          minimum: body?.minimum
+        });
+        return json(result, 200, cors);
+      } catch (error) {
+        const message = error?.message || "Wallet balance lookup failed. Please try again.";
+        const status = /Enter a valid|Choose a supported|not supported|positive decimal|too many decimal places/i.test(message) ? 400 : 502;
+        return json({ error: message }, status, cors);
+      }
     }
     if (url.pathname === "/api/verify/binance" && request.method === "POST") {
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
