@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createBinanceBalanceProof } from "./binance.js";
+import { getOnchainBalance } from "./wallet.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -25,6 +26,23 @@ app.get("/api/health", (_req, res) => {
     app: "proof-of-balance",
     primusConfigured: Boolean(process.env.ZKTLS_APP_ID && process.env.ZKTLS_APP_SECRET)
   });
+});
+
+
+app.post("/api/wallet/balance", async (req, res) => {
+  try {
+    const result = await getOnchainBalance({
+      address: req.body?.address,
+      network: req.body?.network,
+      asset: req.body?.asset,
+      minimum: req.body?.minimum
+    });
+    return res.json(result);
+  } catch (error) {
+    const message = error?.message || "Wallet balance lookup failed. Please try again.";
+    const status = /Enter a valid|Choose a supported|not supported|positive decimal|too many decimal places/i.test(message) ? 400 : 502;
+    return res.status(status).json({ error: message });
+  }
 });
 
 app.post("/api/verify/binance", async (req, res) => {
