@@ -171,3 +171,8 @@ Official references:
 - [Primus Network SDK demo](https://github.com/primus-labs/zktls-demo/tree/main/network-sdk-example)
 - [Primus DApp SDK guide](https://github.com/primus-labs/skills/tree/main/primus-network-js-sdk-dapp)
 - [Primus Developer Hub](https://dev.primuslabs.xyz/)
+
+
+## Reproducible Cloudflare builds
+
+The repository pins `npm@10.9.2` in `package.json` to match the Workers Builds image. The GitHub Actions workflow regenerates `package-lock.json` with that npm version, commits lockfile corrections on `main`, and verifies a clean `npm ci` before building. Keep the manifest and lockfile in sync when changing dependencies.
