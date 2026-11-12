@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,7 +17,20 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm install --ignore-scripts
+      - name: Regenerate npm lockfile with Cloudflare's npm version
+        run: npx --yes npm@10.9.2 install --package-lock-only --ignore-scripts
+      - name: Commit updated lockfile on main
+        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore: sync npm lockfile"
+            git push
+          fi
+      - name: Install exactly from the regenerated lockfile
+        run: npx --yes npm@10.9.2 ci --ignore-scripts
       - run: npm test
       - run: npm run build
       - run: npx --yes wrangler deploy --dry-run
