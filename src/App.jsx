@@ -218,13 +218,13 @@ export default function App() {
 
           <div className="primus-disclaimer">
             <LockKeyhole size={15}/>
-            <p>Open Binance using Connect Binance, sign in if prompted, then return here and select Verify trading history. The Primus browser extension generates an attestation for the configured Binance response using your authenticated browser session. This app never asks for your Binance password, wallet access, wallet signatures, blockchain transactions or gas.</p>
+            <p>Open Binance using Connect Binance, sign in if prompted, then return here and select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"}. The Primus browser extension generates an attestation for the configured Binance response using your authenticated browser session. This app never asks for your Binance password, wallet access, wallet signatures, blockchain transactions or gas.</p>
           </div>
           {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
           {sdkError && <div className="error-box" role="alert">{sdkError}</div>}
           {primusError && <div className="error-box" role="alert">{primusError} <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Get Primus extension</a></div>}
           <p className="primus-hint">The Primus browser extension is required. <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Install extension</a>.</p>
-          <p className="primus-hint">The app displays the configured <code>{selectedTemplate.dataKey}</code> field at <code>{selectedTemplate.jsonPath}</code> exactly as returned. It does not infer or convert the source value. For trade history, this is the response returned by Binance for the signed-in account session.</p>
+          <p className="primus-hint">The app displays the configured <code>{selectedTemplate.dataKey}</code> field at <code>{selectedTemplate.jsonPath}</code> exactly as returned. It does not infer or convert the source value. This is the response returned by Binance for the signed-in account session.</p>
         </> : <>
           <div className="template-list-heading">
             <span className="template-eyebrow">PRIMUS DEVELOPER HUB TEMPLATES</span>
@@ -273,7 +273,7 @@ export default function App() {
           <div className="empty-icon"><img src={BINANCE_ICON} alt="Binance" /></div>
           <span className="step-label">02 — BINANCE TEMPLATE RESULT</span>
           <h2>Your attested data will appear here</h2>
-          <p>Select Connect Binance, sign in to your account in the new tab, then return here and select Verify trading history to generate the Primus zkTLS attestation.</p>
+          <p>Select Connect Binance, sign in to your account in the new tab, then return here and select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"} to generate the Primus zkTLS attestation.</p>
           <div className="result-skeleton"><span/><span/><span/></div>
           <div className="boundary"><CircleHelp size={16}/><span>The selected template returns the configured field at {selectedTemplate.jsonPath}. The app displays the attested value after local signature verification.</span></div>
         </div> : <div className="empty-state">
