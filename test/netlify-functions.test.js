@@ -86,3 +86,27 @@ test("Netlify signing function identifies an invalid-format App Secret without e
     restoreCredentials();
   }
 });
+
+test("Netlify sign function loads the signing module and returns validation errors as JSON", async () => {
+  const priorId = process.env.ZKTLS_APP_ID;
+  const priorSecret = process.env.ZKTLS_APP_SECRET;
+  process.env.ZKTLS_APP_ID = "test-primus-app-id";
+  process.env.ZKTLS_APP_SECRET = "test-primus-app-secret";
+  try {
+    const response = await sign(new Request("https://veriffy.netlify.app/api/primus/sign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ signParams: "{}" })
+    }));
+    const data = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(data.code, "PRIMUS_REQUEST_REJECTED");
+    assert.match(data.error, /App ID does not match/);
+    assert.equal(JSON.stringify(data).includes("test-primus-app-secret"), false);
+  } finally {
+    if (priorId === undefined) delete process.env.ZKTLS_APP_ID;
+    else process.env.ZKTLS_APP_ID = priorId;
+    if (priorSecret === undefined) delete process.env.ZKTLS_APP_SECRET;
+    else process.env.ZKTLS_APP_SECRET = priorSecret;
+  }
+});
