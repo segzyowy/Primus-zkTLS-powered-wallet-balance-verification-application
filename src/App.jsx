@@ -51,7 +51,7 @@ export default function App() {
         const response = await fetch("/api/primus/config", { cache: "no-store" });
         const config = await response.json();
         if (!response.ok || !config.appId) {
-          throw new Error(config.error || "Primus is not configured. Add ZKTLS_APP_ID and ZKTLS_APP_SECRET as Worker secrets.");
+          throw new Error(config.error || "Primus is not configured. Add ZKTLS_APP_ID and ZKTLS_APP_SECRET as server-side environment variables for this deployment.");
         }
         const primus = new PrimusZKTLS();
         await primus.init(config.appId);
