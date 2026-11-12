@@ -220,3 +220,40 @@ footer i{background:#c4b8ac}
 .primus-hint{margin:9px 0 0;color:#8c8075;font-size:10px;line-height:1.5}
 .primus-hint a,.error-box a{color:#d94c0c;text-decoration:underline}
 @media(max-width:760px){.primus-panel{padding:14px}}
+
+
+/* Binance 7-day Spot PnL template */
+.binance-mini-logo{width:17px;height:17px;object-fit:contain;display:block}
+.binance-pnl-card{display:flex;flex-direction:column;gap:16px}
+.binance-template-heading{display:flex;align-items:center;gap:15px}
+.binance-logo{width:54px;height:54px;object-fit:contain;flex:none;padding:8px;border:1px solid #eee2d6;border-radius:13px;background:#fff}
+.template-eyebrow{display:block;margin-bottom:5px;color:#d94b0c;font:500 9px 'DM Mono',monospace;letter-spacing:1px}
+.binance-template-heading h2{margin:0 0 5px;font:800 20px Manrope,sans-serif;letter-spacing:-.6px}
+.binance-template-heading p{margin:0;color:#80746a;font-size:12px;line-height:1.55}
+.template-try-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #f0dfd1;border-radius:10px;background:#fff9f3}
+.template-status{display:inline-flex;align-items:center;gap:6px;color:#7b6a5d;font-size:10px;font-weight:700}
+.template-status svg{color:#dc4b0c}
+.template-try-btn{width:auto;min-width:104px;margin:0}
+.template-details{padding:15px;border:1px solid #e9e0d7;border-radius:10px;background:#fffdfa}
+.template-details h3{margin:0 0 11px;color:#29221c;font:700 13px Manrope,sans-serif}
+.template-detail-row{display:grid;grid-template-columns:108px minmax(0,1fr);align-items:start;gap:10px;padding:8px 0;border-top:1px solid #f0e9e1}
+.template-detail-row>span,.template-data-item>span{color:#81766d;font-size:10px}
+.template-detail-row code,.template-data-item code{min-width:0;color:#332a23;font:10px/1.6 'DM Mono',monospace;overflow-wrap:anywhere}
+.template-detail-row a{display:inline-flex;align-items:flex-start;gap:4px;min-width:0;color:#ce480b;font-size:10px;line-height:1.5;text-decoration:none;overflow-wrap:anywhere}
+.template-detail-row a svg{flex:none;margin-top:2px}
+.template-url-row{grid-template-columns:108px minmax(0,1fr)}
+.template-data-item{display:grid;grid-template-columns:108px minmax(0,1fr);gap:7px 10px;padding:10px 0 0;margin-top:3px;border-top:1px solid #f0e9e1}
+.template-data-item strong{color:#29221c;font:700 11px 'DM Mono',monospace}
+.template-data-item code{grid-column:2}
+.template-connect{display:grid;gap:9px}
+.template-connect label{margin:3px 0 -3px}
+.pnl-rate-value{margin:22px 0 10px;padding:20px 0;border-top:1px solid #ece4da;border-bottom:1px solid #ece4da}
+.pnl-rate-value span{display:block;color:#82776e;font-size:11px}
+.pnl-rate-value strong{display:block;margin-top:5px;color:#211c18;font:800 clamp(27px,4vw,38px) Manrope,sans-serif;letter-spacing:-1px;overflow-wrap:anywhere}
+.empty-icon img{width:28px;height:28px;object-fit:contain}
+@media(max-width:760px){
+  .template-detail-row,.template-url-row,.template-data-item{grid-template-columns:1fr}
+  .template-data-item code{grid-column:1}
+  .template-try-row{align-items:flex-start;flex-direction:column}
+  .template-try-btn{width:100%}
+}
