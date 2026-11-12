@@ -1,17 +1,18 @@
 # Proof of Balance
 
-A small web app with two separate checks:
+A small web app with two areas:
 
-1. **Binance 7-Day Spot Account PnL Rate** — a Primus Network zkTLS attestation using a fixed Developer Hub template.
-2. **Public EVM wallet balance** — a read-only RPC lookup for ETH and supported ERC-20 assets.
+1. **Binance templates** — Primus Network zkTLS attestations for Binance Spot PnL and Spot trade-history data.
+2. **Wallet balance** — a read-only public RPC lookup for ETH and supported ERC-20 assets.
 
-## Binance PnL template
+## Binance templates
 
-The Binance screen is preconfigured with the supplied Primus template:
+The Binance tab contains a template chooser. Open either template to review its details, connect an EVM wallet, choose Base Sepolia or Base Mainnet, and select **Try**. Each detail page has a **Back** control to return to the template chooser.
+
+### 7-Day Spot Account PnL Rate
 
 | Field | Value |
 | --- | --- |
-| Title | 7-Day Spot Account PnL Rate |
 | Description | Verify the user’s last 7-day spot account PnL rate. |
 | Template ID | `67ed246d-ff00-47d5-9026-5ff09cbdd65b` |
 | Data source URL | https://www.binance.com/en/my/pnl/spot_account/ |
@@ -19,17 +20,31 @@ The Binance screen is preconfigured with the supplied Primus template:
 | Data item | `spotPnlRate` |
 | JSONPath | `$.data.cumulativeCurrWeek.spotPnlRate` |
 
-The app displays the attested `spotPnlRate` value as returned by the template. It does not add a percentage sign, convert the value, or compare it against an invented threshold. Note that the configured JSONPath includes `cumulativeCurrWeek`; the app preserves that source field and does not silently reinterpret its reporting period.
+The app displays the attested `spotPnlRate` value as returned. It does not add a percentage sign, convert the value or compare it against an invented threshold. The configured JSONPath includes `cumulativeCurrWeek`; the app does not reinterpret its reporting period.
 
-### Try the Binance template
+### 7-Day Spot Trade History
 
-1. Open Binance and sign in in the **same browser**. Visit the [Spot Account PnL page](https://www.binance.com/en/my/pnl/spot_account/).
+| Field | Value |
+| --- | --- |
+| Description | Verify the user’s 30-day spot trade history on Binance. |
+| Template ID | `c25c9f6a-b816-4a67-86ab-7292eff209a3` |
+| Data source URL | https://www.binance.com/en/my/orders/exchange/usertrade |
+| Request URL | https://www.binance.com/bapi/capital/v1/private/streamer/trade/get-user-trades |
+| Data item | `data` |
+| JSONPath | `$.data` |
+
+The app displays the returned `data` value as JSON. The supplied title says 7-Day while the supplied description says 30-day; both are preserved as provided. The app does not infer or alter the covered time range.
+
+### Using a Binance template
+
+1. Open Binance and sign in in the **same browser**. Visit the source page for the chosen template.
 2. Install and enable the Primus browser extension (version 0.3.44 or later).
-3. Open the app’s Binance PnL tab and connect an EVM wallet.
-4. Select Base Sepolia for testing or Base Mainnet for production.
-5. Select **Try**. The Primus Network SDK submits a task on-chain, runs the browser-extension attestation, and waits for the result to be confirmed.
+3. In the Binance tab, select the template and connect an EVM wallet.
+4. Choose Base Sepolia for testing or Base Mainnet for production.
+5. Select **Try**. The Primus Network SDK submits a task on-chain, runs the browser-extension attestation, then waits for the result to be confirmed.
+6. Use **Back** to return to the template chooser and open the other template.
 
-The selected wallet needs ETH on the selected Base network to pay task-submission gas. The template does not transfer Binance assets and the app does not ask for a Binance API key or secret in this flow.
+The selected wallet needs ETH on the selected Base network for task-submission gas. The flow does not transfer Binance assets and does not ask for a Binance API key or secret.
 
 Official links:
 - [Primus Developer Hub](https://dev.primuslabs.xyz/)
@@ -71,7 +86,7 @@ Example request:
 - Node.js 20 or newer and npm
 - MetaMask or another EVM browser wallet
 - Primus browser extension version 0.3.44 or later
-- A Binance account signed in to the same browser for the Binance PnL template
+- A Binance account signed in to the same browser
 - ETH on Base Sepolia (test) or Base Mainnet (production) for the Primus task transaction
 
 ## Run locally
@@ -94,13 +109,14 @@ The Express development server serves the API routes; the Cloudflare Worker serv
 
 ## Proof boundaries and privacy
 
-- The Binance PnL value is taken from the configured Primus template response and shown exactly as returned.
-- The template’s field path is `$.data.cumulativeCurrWeek.spotPnlRate`; the app does not infer a separate rolling-period formula.
+- The app displays the data values selected by the configured Primus templates; it does not invent units, convert figures or infer a time range.
+- The Spot Account PnL JSONPath is `$.data.cumulativeCurrWeek.spotPnlRate`.
+- The Spot Trade History JSONPath is `$.data`.
 - The on-chain task submission is a wallet transaction on the selected Base network. It does not transfer Binance funds.
-- The wallet balance panel is a public RPC lookup and is separate from the Binance PnL zkTLS attestation.
+- The wallet balance panel is a public RPC lookup and is separate from the Binance zkTLS attestations.
 - Never enter a wallet seed phrase or private key into this application.
 
-A legacy server-side Binance account-balance API route remains in the Worker for compatibility, but the current Binance PnL interface does not call it. It is not required for the template flow.
+A legacy server-side Binance account-balance API route remains in the Worker for compatibility, but the current Binance template interface does not call it.
 
 ## Deploy to Cloudflare Workers
 
