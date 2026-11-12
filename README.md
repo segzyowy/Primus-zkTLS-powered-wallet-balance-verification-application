@@ -41,11 +41,11 @@ The app displays the returned `data` value as JSON. The app displays the returne
 
 1. Install and enable the Primus browser extension (version 0.3.44 or later).
 2. Open the app and choose either Binance template.
-3. Select **Connect Binance**. The app opens the selected Binance account page in a new tab; sign in there if prompted. Your Binance password is entered only on Binance.
-4. Return to the app and select **Verify trading history** (or **Verify PnL rate** for the PnL template). The Primus extension generates the attestation using the authenticated Binance browser session; the app then locally verifies the Primus signature.
+3. Select **Verify trading history** (or **Verify PnL rate** for the PnL template). The app opens the selected Binance account page in a new tab and starts the Primus zkTLS attestation.
+4. If Binance asks you to sign in, complete sign-in on Binance. If the first attestation attempt began before sign-in was complete, return to the app and select the verification button again.
 5. Review the selected template field and the full attested response. Select **Back** to choose the other template.
 
-The app cannot read Binance login state directly across sites. Opening the Binance page does not itself prove that you are signed in; complete Binance sign-in before starting the attestation.
+The app cannot read Binance login state directly across sites. Opening the Binance page does not itself prove that you are signed in.
 
 No wallet or blockchain transaction is required.
 
