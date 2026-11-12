@@ -12,39 +12,48 @@ async function withServer(callback) {
   }
 }
 
-test("health endpoint reports app status without exposing secrets", async () => {
+test("health endpoint reports Primus configuration without exposing secrets", async () => {
   await withServer(async base => {
     const response = await fetch(base + "/api/health");
     const data = await response.json();
     assert.equal(response.status, 200);
     assert.equal(data.ok, true);
     assert.equal(data.app, "proof-of-balance");
+    assert.equal(data.walletIntegration, false);
     assert.equal(Object.hasOwn(data, "appSecret"), false);
     assert.equal(Object.hasOwn(data, "apiKey"), false);
   });
 });
 
-test("verification refuses requests without server-side Primus credentials", async () => {
+test("Primus config endpoint never returns the App Secret", async () => {
   await withServer(async base => {
-    const response = await fetch(base + "/api/verify/binance", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ apiKey: "placeholder-key", apiSecret: "placeholder-secret", asset: "USDT", minimum: "100" })
+    const response = await fetch(base + "/api/primus/config");
+    const data = await response.json();
+    assert.equal(response.status, 503);
+    assert.match(data.error, /Primus is not configured/);
+    assert.equal(Object.hasOwn(data, "appSecret"), false);
+  });
+});
+
+test("Primus signing endpoint refuses requests when server-side credentials are absent", async () => {
+  await withServer(async base => {
+    const response = await fetch(base + "/api/primus/sign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ signParams: "{}" })
     });
     const data = await response.json();
     assert.equal(response.status, 503);
     assert.match(data.error, /Primus is not configured/);
-    assert.equal(JSON.stringify(data).includes("placeholder"), false);
+    assert.equal(JSON.stringify(data).includes("appSecret"), false);
   });
 });
 
-test("wallet balance endpoint rejects invalid addresses before querying an RPC", async () => {
+test("wallet and old Binance API integration routes are no longer exposed", async () => {
   await withServer(async base => {
-    const response = await fetch(base + "/api/wallet/balance", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ address: "not-a-wallet", network: "ethereum", asset: "ETH", minimum: "0.1" })
-    });
-    const data = await response.json();
-    assert.equal(response.status, 400);
-    assert.match(data.error, /valid EVM wallet address/);
+    const walletResponse = await fetch(base + "/api/wallet/balance", { method: "POST" });
+    const oldBinanceResponse = await fetch(base + "/api/verify/binance", { method: "POST" });
+    assert.equal(walletResponse.status, 404);
+    assert.equal(oldBinanceResponse.status, 404);
   });
 });
