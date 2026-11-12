@@ -100,8 +100,8 @@ test("Netlify sign function loads the signing module and returns validation erro
     }));
     const data = await response.json();
     assert.equal(response.status, 400);
-    assert.equal(data.code, "PRIMUS_REQUEST_REJECTED");
-    assert.match(data.error, /App ID does not match/);
+    assert.equal(data.code, "PRIMUS_APP_ID_MISMATCH");
+    assert.match(data.error, /does not match the App ID configured/);
     assert.equal(JSON.stringify(data).includes("test-primus-app-secret"), false);
   } finally {
     if (priorId === undefined) delete process.env.ZKTLS_APP_ID;
