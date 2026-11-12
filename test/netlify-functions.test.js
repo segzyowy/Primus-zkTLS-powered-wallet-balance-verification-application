@@ -60,3 +60,29 @@ test("Netlify signing function rejects unsupported methods safely", async () => 
   assert.equal(response.status, 405);
   assert.match(data.error, /Method not allowed/);
 });
+
+test("Netlify signing function identifies an invalid-format App Secret without exposing it", async () => {
+  process.env.ZKTLS_APP_ID = "primus-test-app-id";
+  process.env.ZKTLS_APP_SECRET = "not-a-valid-signing-key";
+  const signParams = JSON.stringify({
+    appId: "primus-test-app-id",
+    attTemplateID: "c25c9f6a-b816-4a67-86ab-7292eff209a3",
+    userAddress: "0x0000000000000000000000000000000000000000",
+    timestamp: Date.now(),
+    attMode: { algorithmType: "proxytls" }
+  });
+  try {
+    const response = await sign(new Request("https://veriffy.netlify.app/api/primus/sign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ signParams })
+    }));
+    const data = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(data.code, "PRIMUS_APP_SECRET_INVALID_FORMAT");
+    assert.match(data.error, /App Secret could not be used as a signing key/);
+    assert.equal(JSON.stringify(data).includes("not-a-valid-signing-key"), false);
+  } finally {
+    restoreCredentials();
+  }
+});
