@@ -44,9 +44,19 @@ test("Netlify functions expose health but never expose secrets", async () => {
     }));
     const signData = await signResponse.json();
     assert.equal(signResponse.status, 503);
-    assert.match(signData.error, /Netlify site/);
+    assert.equal(signData.code, "PRIMUS_CREDENTIALS_MISSING");
+    assert.match(signData.error, /Functions cannot see both/);
     assert.equal(Object.hasOwn(signData, "appSecret"), false);
   } finally {
     restoreCredentials();
   }
+});
+
+test("Netlify signing function rejects unsupported methods safely", async () => {
+  const response = await sign(new Request("https://veriffy.netlify.app/api/primus/sign", {
+    method: "GET"
+  }));
+  const data = await response.json();
+  assert.equal(response.status, 405);
+  assert.match(data.error, /Method not allowed/);
 });
