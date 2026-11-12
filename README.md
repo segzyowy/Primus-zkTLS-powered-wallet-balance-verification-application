@@ -3,13 +3,13 @@
 A Binance Spot verification app with two Primus zkTLS templates:
 
 1. **7-Day Spot Account PnL Rate**
-2. **7-Day Spot Trade History**
+2. **Spot Trade History**
 
 The app uses Primus' enterprise zkTLS JavaScript SDK. It does **not** connect a crypto wallet, request wallet signatures, submit blockchain transactions or require gas. The user signs in to Binance in the same browser and uses the Primus browser extension to complete an attestation.
 
 ## Binance templates
 
-The Binance tab contains a template chooser. Open either template to review its details and select **Try**. Each detail page has a **Back** control to return to the chooser.
+The Binance tab contains a template chooser. Open either template to review its details. Each detail page has a **Back** control to return to the chooser.
 
 ### 7-Day Spot Account PnL Rate
 
@@ -24,7 +24,7 @@ The Binance tab contains a template chooser. Open either template to review its 
 
 The app displays the attested `spotPnlRate` value as returned. It does not add a percentage sign, convert the value or compare it against an invented threshold. The configured JSONPath includes `cumulativeCurrWeek`; the app does not reinterpret its reporting period.
 
-### 7-Day Spot Trade History
+### Spot Trade History
 
 | Field | Value |
 | --- | --- |
@@ -35,15 +35,17 @@ The app displays the attested `spotPnlRate` value as returned. It does not add a
 | Data item | `data` |
 | JSONPath | `$.data` |
 
-The app displays the returned `data` value as JSON. The supplied title says 7-Day while the supplied description says 30-day; both are preserved as provided. The app does not infer or alter the covered time range.
+The app displays the returned `data` value as JSON. The app displays the returned `data` value without inferring or changing the covered time range.
 
 ## How to use it
 
-1. Sign in to Binance in the **same browser** and open the source page for the selected template.
-2. Install and enable the Primus browser extension (version 0.3.44 or later).
-3. Open the app and choose either Binance template.
-4. Select **Try**. The app creates a request for that template, asks its backend to sign the request, runs the zkTLS attestation in the browser extension, then locally verifies the Primus signature.
+1. Install and enable the Primus browser extension (version 0.3.44 or later).
+2. Open the app and choose either Binance template.
+3. Select **Connect Binance**. The app opens the selected Binance account page in a new tab; sign in there if prompted. Your Binance password is entered only on Binance.
+4. Return to the app and select **Verify trading history** (or **Verify PnL rate** for the PnL template). The Primus extension generates the attestation using the authenticated Binance browser session; the app then locally verifies the Primus signature.
 5. Review the selected template field and the full attested response. Select **Back** to choose the other template.
+
+The app cannot read Binance login state directly across sites. Opening the Binance page does not itself prove that you are signed in; complete Binance sign-in before starting the attestation.
 
 No wallet or blockchain transaction is required.
 
