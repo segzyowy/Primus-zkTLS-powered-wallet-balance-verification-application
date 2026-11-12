@@ -88,20 +88,8 @@ export default function App() {
       return;
     }
 
-    let binanceTab;
-    try {
-      binanceTab = window.open(selectedTemplate.sourceUrl, "_blank");
-      if (!binanceTab) {
-        throw new Error("Your browser blocked the Binance tab. Allow pop-ups for this app, then try verification again.");
-      }
-      binanceTab.opener = null;
-    } catch (error) {
-      setPrimusError(error?.message || "Could not open Binance. Allow pop-ups for this app and try again.");
-      return;
-    }
-
     setPrimusBusy(true);
-    setPrimusStep("Opening Binance and preparing the template request");
+    setPrimusStep("Preparing the Primus request; the extension will open Binance");
     try {
       const request = primus.generateRequestParams(selectedTemplate.templateId, PRIMUS_RECIPIENT);
       request.setAttMode({ algorithmType: "proxytls" });
@@ -185,7 +173,7 @@ export default function App() {
           </div>
 
           <div className="template-try-row">
-            <span className="template-status"><ShieldCheck size={14}/> {sdkReady ? "Primus ready" : "Initialising Primus…"}</span>
+            <span className="template-status"><ShieldCheck size={14}/> {sdkReady ? "Primus extension connected" : "Initialising Primus…"}</span>
             <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !sdkReady}>
               {primusBusy
                 ? <><span className="spinner"/> {primusStep || "Verifying…"}</>
@@ -207,7 +195,7 @@ export default function App() {
 
           <div className="primus-disclaimer">
             <LockKeyhole size={15}/>
-            <p>Select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"} to open the relevant Binance account page in a new tab and start the Primus zkTLS attestation. If Binance asks you to sign in, complete sign-in on Binance. This app never asks for your Binance password, wallet access, wallet signatures, blockchain transactions or gas.</p>
+            <p>Select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"} to hand the request to the Primus extension. The extension opens Binance in its own data-source tab, guides the capture, and returns the attestation here. Sign in only on the genuine Binance page if prompted. This app never asks for your Binance password, wallet access, wallet signatures, blockchain transactions or gas.</p>
           </div>
           {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
           {sdkError && <div className="error-box" role="alert">{sdkError}</div>}
@@ -262,7 +250,7 @@ export default function App() {
           <div className="empty-icon"><img src={BINANCE_ICON} alt="Binance" /></div>
           <span className="step-label">02 — BINANCE TEMPLATE RESULT</span>
           <h2>Your attested data will appear here</h2>
-          <p>Select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"} to open Binance and run the Primus zkTLS attestation. If sign-in is required, complete it on Binance and then run verification again.</p>
+          <p>Select {selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"}. The Primus extension opens Binance in its own data-source tab and returns the attested result here. If sign-in is required, complete it on the Binance tab.</p>
           <div className="result-skeleton"><span/><span/><span/></div>
           <div className="boundary"><CircleHelp size={16}/><span>The selected template returns the configured field at {selectedTemplate.jsonPath}. The app displays the attested value after local signature verification.</span></div>
         </div> : <div className="empty-state">
