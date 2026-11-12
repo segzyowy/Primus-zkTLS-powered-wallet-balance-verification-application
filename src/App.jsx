@@ -38,7 +38,7 @@ const networkOptions = {
 };
 
 export default function App() {
-  const [method, setMethod] = useState("wallet");
+  const [method, setMethod] = useState("binance");
   const [walletForm, setWalletForm] = useState({ address: "", network: "ethereum", asset: "ETH", minimum: "0.1" });
   const [walletBusy, setWalletBusy] = useState(false);
   const [walletResult, setWalletResult] = useState(null);
@@ -226,12 +226,12 @@ export default function App() {
     <section className="hero" id="top">
       <div className="eyebrow"><span className="pulse"/> PUBLIC DATA, VERIFIABLE CHECKS</div>
       <h1>Your account.<br/><span>Your proof.</span></h1>
-      <p className="intro">Check a public on-chain wallet balance or use Primus zkTLS to verify your Binance 7-day Spot account PnL rate.</p>
+      <p className="intro">Use Primus zkTLS to verify your Binance 7-day Spot account PnL rate, or check a public on-chain wallet balance.</p>
       <div className="trust-row"><span><ShieldCheck size={16}/> User-authorised checks</span><i/><span>No asset transfers</span><i/><span>Attested source data</span></div>
     </section>
 
     <div className="method-switch" role="tablist" aria-label="Verification method">
-      <button type="button" className={method === "wallet" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("wallet"); setWalletError(""); }} role="tab" aria-selected={method === "wallet"}><Wallet size={16}/> Wallet</button>
+      <button type="button" className={method === "wallet" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("wallet"); setWalletError(""); }} role="tab" aria-selected={method === "wallet"}><Wallet size={16}/> Wallet balance</button>
       <button type="button" className={method === "binance" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("binance"); setPrimusError(""); }} role="tab" aria-selected={method === "binance"}><img className="binance-mini-logo" src={BINANCE_PNL_TEMPLATE.icon} alt="" /> Binance PnL</button>
     </div>
 
