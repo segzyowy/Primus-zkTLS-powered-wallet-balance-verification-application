@@ -248,7 +248,7 @@ export default function App() {
         </div>
         <label htmlFor="walletMinimum">Minimum balance ({walletForm.asset})</label>
         <input id="walletMinimum" name="minimum" inputMode="decimal" value={walletForm.minimum} onChange={updateWallet} placeholder="Enter minimum balance" required/>
-        <div className="privacy-note"><LockKeyhole size={16}/><p>This balance lookup is read-only: no seed phrase, private key, signature or transaction is needed. The separate Primus panel below submits an on-chain task and requires gas on Base.</p></div>
+        <div className="privacy-note"><LockKeyhole size={16}/><p>This wallet balance lookup is read-only: no seed phrase, private key or signature is needed. The separate Binance PnL template uses Primus and requires a wallet transaction for task submission.</p></div>
         {walletError && <div className="error-box" role="alert">{walletError}</div>}
         <button className="primary-btn" disabled={walletBusy}>{walletBusy ? <><span className="spinner"/> Checking on-chain balance…</> : <>Check wallet balance <ArrowUpRight size={17}/></>}</button>
         <p className="key-tip">This checks the selected network only. A balance lookup does not prove you control the address.</p>
@@ -264,7 +264,7 @@ export default function App() {
         </div>
 
         <div className="template-try-row">
-          <span className="template-status"><ShieldCheck size={14}/> Template ready</span>
+          <span className="template-status"><ShieldCheck size={14}/> Template ID configured</span>
           <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !walletConnected}>
             {primusBusy ? <><span className="spinner"/> {primusStep || "Verifying…"}</> : <>Try <ArrowUpRight size={15}/></>}
           </button>
@@ -301,6 +301,7 @@ export default function App() {
           <p>Sign in to Binance in this same browser and open the Spot PnL page before selecting Try. The Primus extension accesses the configured Binance response for attestation. You must also connect an EVM wallet and approve an on-chain task on the selected Base network; ETH is needed for gas. No Binance API key is entered into this app.</p>
         </div>
         {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
+        {walletError && <div className="error-box" role="alert">{walletError}</div>}
         {primusError && <div className="error-box" role="alert">{primusError} <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Get Primus extension</a></div>}
         {!walletConnected && <p className="primus-hint">Connect your EVM wallet first. You will need ETH for gas on the selected Base network.</p>}
         <p className="primus-hint">The result displays the attested spotPnlRate value exactly as returned. The configured JSONPath targets cumulativeCurrWeek; the app does not convert the value or infer a different reporting period.</p>
