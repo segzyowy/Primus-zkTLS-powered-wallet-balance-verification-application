@@ -1,17 +1,34 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 import { PrimusNetwork } from "@primuslabs/network-js-sdk";
-import { ArrowDownToLine, ArrowUpRight, Check, ChevronDown, CircleHelp, LockKeyhole, ShieldCheck, Wallet, Link2 } from "lucide-react";
+import { ArrowDownToLine, ArrowLeft, ArrowUpRight, Check, ChevronDown, CircleHelp, LockKeyhole, ShieldCheck, Wallet, Link2 } from "lucide-react";
 
-const BINANCE_PNL_TEMPLATE = {
-  icon: "https://storage.googleapis.com/primuslabs-online/developer-center/website-icon/binance.png",
-  title: "7-Day Spot Account PnL Rate",
-  description: "Verify the user’s last 7-day spot account PnL rate.",
-  templateId: "67ed246d-ff00-47d5-9026-5ff09cbdd65b",
-  sourceUrl: "https://www.binance.com/en/my/pnl/spot_account/",
-  requestUrl: "https://www.binance.com/bapi/composite/v1/private/bigdata/finance/spot-statistics",
-  dataKey: "spotPnlRate",
-  jsonPath: "$.data.cumulativeCurrWeek.spotPnlRate"
+const BINANCE_ICON = "https://storage.googleapis.com/primuslabs-online/developer-center/website-icon/binance.png";
+const BINANCE_TEMPLATES = {
+  pnl: {
+    key: "pnl",
+    icon: BINANCE_ICON,
+    title: "7-Day Spot Account PnL Rate",
+    description: "Verify the user’s last 7-day spot account PnL rate.",
+    templateId: "67ed246d-ff00-47d5-9026-5ff09cbdd65b",
+    sourceUrl: "https://www.binance.com/en/my/pnl/spot_account/",
+    requestUrl: "https://www.binance.com/bapi/composite/v1/private/bigdata/finance/spot-statistics",
+    dataKey: "spotPnlRate",
+    jsonPath: "$.data.cumulativeCurrWeek.spotPnlRate",
+    sourceLabel: "Open Binance Spot PnL"
+  },
+  trades: {
+    key: "trades",
+    icon: BINANCE_ICON,
+    title: "7-Day Spot Trade History",
+    description: "Verify the user’s 30-day spot trade history on Binance.",
+    templateId: "c25c9f6a-b816-4a67-86ab-7292eff209a3",
+    sourceUrl: "https://www.binance.com/en/my/orders/exchange/usertrade",
+    requestUrl: "https://www.binance.com/bapi/capital/v1/private/streamer/trade/get-user-trades",
+    dataKey: "data",
+    jsonPath: "$.data",
+    sourceLabel: "Open Binance Spot Trade History"
+  }
 };
 const primusChains = {
   baseSepolia: {
@@ -45,6 +62,7 @@ export default function App() {
   const [walletError, setWalletError] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
   const [primusChain, setPrimusChain] = useState("baseSepolia");
+  const [selectedBinanceTemplateKey, setSelectedBinanceTemplateKey] = useState(null);
   const [primusBusy, setPrimusBusy] = useState(false);
   const [primusStep, setPrimusStep] = useState("");
   const [primusResult, setPrimusResult] = useState(null);
@@ -97,7 +115,12 @@ export default function App() {
       setPrimusError("Connect your wallet first, then start the Primus attestation.");
       return;
     }
-    const templateId = BINANCE_PNL_TEMPLATE.templateId;
+    const selectedTemplate = selectedBinanceTemplateKey ? BINANCE_TEMPLATES[selectedBinanceTemplateKey] : null;
+    if (!selectedTemplate) {
+      setPrimusError("Choose a Binance template first.");
+      return;
+    }
+    const templateId = selectedTemplate.templateId;
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(templateId)) {
       setPrimusError("Enter a valid Primus Template ID from the Developer Hub.");
       return;
@@ -169,19 +192,23 @@ export default function App() {
         try { verifiedData = JSON.parse(verifiedData); } catch {}
       }
 
-      const spotPnlRate = findNamedValue(verifiedData, BINANCE_PNL_TEMPLATE.dataKey);
-      if (spotPnlRate === undefined || spotPnlRate === null) {
-        throw new Error("The attestation was confirmed, but the spotPnlRate field was not found in the returned template data. Review the template response before relying on a result.");
+      const templateValue = getJsonPathValue(verifiedData, selectedTemplate.jsonPath);
+      if (templateValue === undefined || templateValue === null) {
+        throw new Error(`The attestation was confirmed, but the configured field ${selectedTemplate.jsonPath} was not found in the returned template data.`);
       }
 
       setPrimusResult({
+        templateKey: selectedTemplate.key,
+        templateTitle: selectedTemplate.title,
+        dataKey: selectedTemplate.dataKey,
+        jsonPath: selectedTemplate.jsonPath,
         chain: selectedChain.label,
         address: connectedAddress,
         taskId: attestationItem.taskId,
         taskTxHash: submitTaskResult?.taskTxHash || "",
         reportTxHash: attestationItem.reportTxHash || "",
         data: verifiedData,
-        spotPnlRate,
+        value: templateValue,
         taskResult
       });
       setPrimusStep("Primus attestation confirmed");
@@ -226,13 +253,13 @@ export default function App() {
     <section className="hero" id="top">
       <div className="eyebrow"><span className="pulse"/> PUBLIC DATA, VERIFIABLE CHECKS</div>
       <h1>Your account.<br/><span>Your proof.</span></h1>
-      <p className="intro">Use Primus zkTLS to verify your Binance 7-day Spot account PnL rate, or check a public on-chain wallet balance.</p>
+      <p className="intro">Use Primus zkTLS to verify Binance Spot account PnL or Spot trade-history data, or check a public on-chain wallet balance.</p>
       <div className="trust-row"><span><ShieldCheck size={16}/> User-authorised checks</span><i/><span>No asset transfers</span><i/><span>Attested source data</span></div>
     </section>
 
     <div className="method-switch" role="tablist" aria-label="Verification method">
       <button type="button" className={method === "wallet" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("wallet"); setWalletError(""); }} role="tab" aria-selected={method === "wallet"}><Wallet size={16}/> Wallet balance</button>
-      <button type="button" className={method === "binance" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("binance"); setPrimusError(""); }} role="tab" aria-selected={method === "binance"}><img className="binance-mini-logo" src={BINANCE_PNL_TEMPLATE.icon} alt="" /> Binance PnL</button>
+      <button type="button" className={method === "binance" ? "method-tab active" : "method-tab"} onClick={() => { setMethod("binance"); setPrimusError(""); }} role="tab" aria-selected={method === "binance"}><img className="binance-mini-logo" src={BINANCE_ICON} alt="" /> Binance templates</button>
     </div>
 
     <section className="workspace">
@@ -254,58 +281,91 @@ export default function App() {
         <p className="key-tip">This checks the selected network only. A balance lookup does not prove you control the address.</p>
 
       </form> : <section className="card form-card binance-pnl-card">
-        <div className="binance-template-heading">
-          <img src={BINANCE_PNL_TEMPLATE.icon} alt="Binance" className="binance-logo" />
-          <div>
-            <span className="template-eyebrow">BINANCE · PRIMUS ZKTLS</span>
-            <h2>{BINANCE_PNL_TEMPLATE.title}</h2>
-            <p>{BINANCE_PNL_TEMPLATE.description}</p>
+        {selectedBinanceTemplateKey ? (() => {
+          const template = BINANCE_TEMPLATES[selectedBinanceTemplateKey];
+          return <>
+            <button className="template-back-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(null); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
+              <ArrowLeft size={15}/> Back
+            </button>
+            <div className="binance-template-heading">
+              <img src={template.icon} alt="Binance" className="binance-logo" />
+              <div>
+                <span className="template-eyebrow">BINANCE · PRIMUS ZKTLS</span>
+                <h2>{template.title}</h2>
+                <p>{template.description}</p>
+              </div>
+            </div>
+
+            <div className="template-try-row">
+              <span className="template-status"><ShieldCheck size={14}/> Template ID configured</span>
+              <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !walletConnected}>
+                {primusBusy ? <><span className="spinner"/> {primusStep || "Verifying…"}</> : <>Try <ArrowUpRight size={15}/></>}
+              </button>
+            </div>
+
+            <div className="template-details">
+              <h3>Template details</h3>
+              <div className="template-detail-row"><span>Template ID</span><code>{template.templateId}</code></div>
+              <div className="template-detail-row"><span>Data source URL</span><a href={template.sourceUrl} target="_blank" rel="noreferrer">{template.sourceLabel} <ArrowUpRight size={12}/></a></div>
+              <div className="template-detail-row template-url-row"><span>Request URL</span><a href={template.requestUrl} target="_blank" rel="noreferrer">{template.requestUrl} <ArrowUpRight size={12}/></a></div>
+              <div className="template-data-item">
+                <span>Data items (jsonPath)</span>
+                <strong>{template.dataKey}</strong>
+                <code>{template.jsonPath}</code>
+              </div>
+            </div>
+
+            <div className="template-connect">
+              <button className="connect-wallet-btn" type="button" onClick={connectWallet}>
+                <Wallet size={16}/>{walletConnected ? "Wallet connected" : "Connect wallet to continue"}
+              </button>
+              <label htmlFor="primusChain">Primus network</label>
+              <div className="select-wrap">
+                <select id="primusChain" value={primusChain} onChange={event => { setPrimusChain(event.target.value); setPrimusResult(null); setPrimusError(""); }}>
+                  <option value="baseSepolia">Base Sepolia — testnet</option>
+                  <option value="base">Base Mainnet</option>
+                </select>
+                <ChevronDown size={16}/>
+              </div>
+            </div>
+
+            <div className="primus-disclaimer">
+              <LockKeyhole size={15}/>
+              <p>Sign in to Binance in this same browser and open the page for this template before selecting Try. The Primus extension accesses the configured Binance response for attestation. You must connect an EVM wallet and approve an on-chain task on the selected Base network; ETH is needed for gas. No Binance API key is entered into this app.</p>
+            </div>
+            {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
+            {walletError && <div className="error-box" role="alert">{walletError}</div>}
+            {primusError && <div className="error-box" role="alert">{primusError} <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Get Primus extension</a></div>}
+            {!walletConnected && <p className="primus-hint">Connect your EVM wallet first. You will need ETH for gas on the selected Base network.</p>}
+            <p className="primus-hint">The result displays the configured <code>{template.dataKey}</code> field at <code>{template.jsonPath}</code> as returned by this template.</p>
+          </>;
+        })() : <>
+          <div className="template-list-heading">
+            <span className="template-eyebrow">PRIMUS DEVELOPER HUB TEMPLATES</span>
+            <h2>Binance verification templates</h2>
+            <p>Choose the Binance Spot data you want to verify.</p>
           </div>
-        </div>
-
-        <div className="template-try-row">
-          <span className="template-status"><ShieldCheck size={14}/> Template ID configured</span>
-          <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !walletConnected}>
-            {primusBusy ? <><span className="spinner"/> {primusStep || "Verifying…"}</> : <>Try <ArrowUpRight size={15}/></>}
-          </button>
-        </div>
-
-        <div className="template-details">
-          <h3>Template details</h3>
-          <div className="template-detail-row"><span>Template ID</span><code>{BINANCE_PNL_TEMPLATE.templateId}</code></div>
-          <div className="template-detail-row"><span>Data source URL</span><a href={BINANCE_PNL_TEMPLATE.sourceUrl} target="_blank" rel="noreferrer">Open Binance Spot PnL <ArrowUpRight size={12}/></a></div>
-          <div className="template-detail-row template-url-row"><span>Request URL</span><a href={BINANCE_PNL_TEMPLATE.requestUrl} target="_blank" rel="noreferrer">{BINANCE_PNL_TEMPLATE.requestUrl} <ArrowUpRight size={12}/></a></div>
-          <div className="template-data-item">
-            <span>Data items (jsonPath)</span>
-            <strong>{BINANCE_PNL_TEMPLATE.dataKey}</strong>
-            <code>{BINANCE_PNL_TEMPLATE.jsonPath}</code>
-          </div>
-        </div>
-
-        <div className="template-connect">
-          <button className="connect-wallet-btn" type="button" onClick={connectWallet}>
-            <Wallet size={16}/>{walletConnected ? "Wallet connected" : "Connect wallet to continue"}
-          </button>
-          <label htmlFor="primusChain">Primus network</label>
-          <div className="select-wrap">
-            <select id="primusChain" value={primusChain} onChange={event => { setPrimusChain(event.target.value); setPrimusResult(null); setPrimusError(""); }}>
-              <option value="baseSepolia">Base Sepolia — testnet</option>
-              <option value="base">Base Mainnet</option>
-            </select>
-            <ChevronDown size={16}/>
-          </div>
-        </div>
-
-        <div className="primus-disclaimer">
-          <LockKeyhole size={15}/>
-          <p>Sign in to Binance in this same browser and open the Spot PnL page before selecting Try. The Primus extension accesses the configured Binance response for attestation. You must also connect an EVM wallet and approve an on-chain task on the selected Base network; ETH is needed for gas. No Binance API key is entered into this app.</p>
-        </div>
-        {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
-        {walletError && <div className="error-box" role="alert">{walletError}</div>}
-        {primusError && <div className="error-box" role="alert">{primusError} <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Get Primus extension</a></div>}
-        {!walletConnected && <p className="primus-hint">Connect your EVM wallet first. You will need ETH for gas on the selected Base network.</p>}
-        <p className="primus-hint">The result displays the attested spotPnlRate value exactly as returned. The configured JSONPath targets cumulativeCurrWeek; the app does not convert the value or infer a different reporting period.</p>
-      </section>}
+          {Object.values(BINANCE_TEMPLATES).map(template => (
+            <article className="binance-template-option" key={template.key}>
+              <div className="binance-template-option-head">
+                <img src={template.icon} alt="Binance" className="binance-option-logo" />
+                <div>
+                  <h3>{template.title}</h3>
+                  <p>{template.description}</p>
+                </div>
+              </div>
+              <div className="binance-template-option-meta">
+                <span>Template ID</span><code>{template.templateId}</code>
+                <span>Data item</span><strong>{template.dataKey}</strong>
+              </div>
+              <button className="secondary-btn template-open-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(template.key); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
+                View template <ArrowUpRight size={13}/>
+              </button>
+            </article>
+          ))}
+          <p className="primus-hint">Open a template to review its source details and run its Primus zkTLS attestation.</p>
+        </>}
+      </section>
 
       <section className="card result-card" aria-live="polite">
         {method === "wallet" ? (walletResult ? <div className="proof-result">
@@ -317,50 +377,59 @@ export default function App() {
           <a className="secondary-btn" href={walletResult.explorerUrl} target="_blank" rel="noreferrer"><Link2 size={15}/> View address on block explorer <ArrowUpRight size={13}/></a>
           <button className="secondary-btn reset-btn" type="button" onClick={() => { setWalletResult(null); setWalletError(""); }}><ArrowDownToLine size={15}/> Check another address</button>
         </div> : <div className="empty-state"><div className="empty-icon"><Wallet size={25}/></div><span className="step-label">02 — WALLET RESULT</span><h2>Your wallet check will appear here</h2><p>We’ll read the selected asset balance from the chosen public EVM network at a specific block, then compare it with your minimum.</p><div className="result-skeleton"><span/><span/><span/></div><div className="boundary"><CircleHelp size={16}/><span>This is a public RPC balance lookup, not a cryptographic proof or proof that you control the address.</span></div></div>) : (primusResult ? <div className="proof-result">
-          <div className="result-top"><div className="result-icon"><Check size={22}/></div><div><span className="step-label">PRIMUS ATTESTATION VERIFIED</span><h2>7-Day Spot PnL rate attested</h2></div><span className="status pass">VERIFIED</span></div>
-          <div className="pnl-rate-value"><span>spotPnlRate · raw template value</span><strong>{String(primusResult.spotPnlRate)}</strong></div>
-          <div className="balance-lines"><div><span>Data source</span><b>Binance Spot Account PnL</b></div><div><span>JSONPath</span><b>{BINANCE_PNL_TEMPLATE.jsonPath}</b></div><div><span>Wallet</span><b>{shortAddress(primusResult.address)}</b></div><div><span>Primus network</span><b>{primusResult.chain}</b></div></div>
+          <div className="result-top"><div className="result-icon"><Check size={22}/></div><div><span className="step-label">PRIMUS ATTESTATION VERIFIED</span><h2>{primusResult.templateTitle}</h2></div><span className="status pass">VERIFIED</span></div>
+          <div className={primusResult.templateKey === "pnl" ? "pnl-rate-value" : "trade-history-value"}>
+            <span>{primusResult.dataKey} · attested template value</span>
+            {primusResult.templateKey === "pnl" && (typeof primusResult.value === "string" || typeof primusResult.value === "number")
+              ? <strong>{String(primusResult.value)}</strong>
+              : <pre>{JSON.stringify(primusResult.value, null, 2)}</pre>}
+          </div>
+          <div className="balance-lines"><div><span>Data source</span><b>Binance Spot</b></div><div><span>JSONPath</span><b>{primusResult.jsonPath}</b></div><div><span>Wallet</span><b>{shortAddress(primusResult.address)}</b></div><div><span>Primus network</span><b>{primusResult.chain}</b></div></div>
           <div className="proof-meta">
             {primusResult.taskTxHash && <div><span>Task transaction</span><a href={primusChains[primusChain].explorer + "/tx/" + primusResult.taskTxHash} target="_blank" rel="noreferrer">View transaction <ArrowUpRight size={12}/></a></div>}
             {primusResult.reportTxHash && <div><span>Attestation transaction</span><a href={primusChains[primusChain].explorer + "/tx/" + primusResult.reportTxHash} target="_blank" rel="noreferrer">View attestation <ArrowUpRight size={12}/></a></div>}
           </div>
-          <div className="boundary verified"><ShieldCheck size={16}/><span>Primus confirmed the attestation task. The app displays the configured spotPnlRate field as returned; its unit and reporting period follow Binance’s template response.</span></div>
-          <span className="primus-data-label">ATTESTED TEMPLATE RESPONSE</span>
+          <div className="boundary verified"><ShieldCheck size={16}/><span>Primus confirmed the attestation task. The app displays the configured field as returned; it does not transform or infer additional meaning from the source data.</span></div>
+          <span className="primus-data-label">FULL ATTESTED TEMPLATE RESPONSE</span>
           <pre>{JSON.stringify(primusResult.data ?? primusResult.taskResult ?? {}, null, 2)}</pre>
           <button className="secondary-btn reset-btn" type="button" onClick={() => { setPrimusResult(null); setPrimusError(""); }}><ArrowDownToLine size={15}/> Try again</button>
-        </div> : <div className="empty-state">
-          <div className="empty-icon"><img src={BINANCE_PNL_TEMPLATE.icon} alt="Binance" /></div>
-          <span className="step-label">02 — BINANCE PNL RESULT</span>
-          <h2>Your 7-day Spot PnL attestation will appear here</h2>
+        </div> : selectedBinanceTemplateKey ? <div className="empty-state">
+          <div className="empty-icon"><img src={BINANCE_ICON} alt="Binance" /></div>
+          <span className="step-label">02 — BINANCE TEMPLATE RESULT</span>
+          <h2>Your attested data will appear here</h2>
           <p>Connect your wallet, sign in to Binance in this browser, then select Try to generate the Primus zkTLS attestation.</p>
           <div className="result-skeleton"><span/><span/><span/></div>
-          <div className="boundary"><CircleHelp size={16}/><span>The template targets {BINANCE_PNL_TEMPLATE.dataKey} at {BINANCE_PNL_TEMPLATE.jsonPath}. The result will be shown as returned by the source template.</span></div>
+          <div className="boundary"><CircleHelp size={16}/><span>The selected template will return the value at {BINANCE_TEMPLATES[selectedBinanceTemplateKey].jsonPath}. It will be shown as returned by the source template.</span></div>
+        </div> : <div className="empty-state">
+          <div className="empty-icon"><img src={BINANCE_ICON} alt="Binance" /></div>
+          <span className="step-label">02 — BINANCE TEMPLATE RESULT</span>
+          <h2>Select a template to begin</h2>
+          <p>Choose Spot Account PnL Rate or Spot Trade History. The corresponding attested result will appear here.</p>
+          <div className="result-skeleton"><span/><span/><span/></div>
+          <div className="boundary"><CircleHelp size={16}/><span>Each template has its own request URL, data item and JSONPath.</span></div>
         </div>)}
       </section>
     </section>
-    <footer><span>Built for transparent verification.</span><span>{method === "wallet" ? "EVM JSON-RPC" : "Primus zkTLS"} <i/> {method === "wallet" ? "Ethereum · Base · BNB Chain" : "Binance 7-Day Spot PnL"}</span></footer>
+    <footer><span>Built for transparent verification.</span><span>{method === "wallet" ? "EVM JSON-RPC" : "Primus zkTLS"} <i/> {method === "wallet" ? "Ethereum · Base · BNB Chain" : "Binance Spot templates"}</span></footer>
   </main>;
 }
 
-function findNamedValue(value, key) {
-  if (typeof value === "string") {
-    try { return findNamedValue(JSON.parse(value), key); } catch { return undefined; }
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findNamedValue(item, key);
-      if (found !== undefined) return found;
+function parseTemplateData(value) {
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value); } catch { return value; }
+}
+
+function getJsonPathValue(source, jsonPath) {
+  const segments = jsonPath.replace(/^\$\.?/, "").split(".").filter(Boolean);
+  let current = parseTemplateData(source);
+  for (const segment of segments) {
+    current = parseTemplateData(current);
+    if (current === null || current === undefined || typeof current !== "object" || !(segment in current)) {
+      return undefined;
     }
-    return undefined;
+    current = current[segment];
   }
-  if (value && typeof value === "object") {
-    if (Object.prototype.hasOwnProperty.call(value, key)) return value[key];
-    for (const nested of Object.values(value)) {
-      const found = findNamedValue(nested, key);
-      if (found !== undefined) return found;
-    }
-  }
-  return undefined;
+  return parseTemplateData(current);
 }
 
 function shortAddress(address) {
