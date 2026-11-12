@@ -30,6 +30,6 @@ test("request must use this application's App ID and supported TLS mode", () => 
 });
 
 test("signing rejects malformed and expired requests", () => {
-  assert.throws(() => validatePrimusSignParams("{", "public-primus-app-id"), /valid JSON/);
+  assert.throws(() => validatePrimusSignParams("{bad}", "public-primus-app-id"), /valid JSON/);
   assert.throws(() => validatePrimusSignParams(request({ timestamp: Date.now() - 10 * 60_000 }), "public-primus-app-id"), /expired/);
 });
