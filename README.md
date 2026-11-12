@@ -49,7 +49,7 @@ No wallet or blockchain transaction is required.
 
 ## Wallet-free Primus architecture
 
-This app uses the **Primus enterprise zkTLS SDK** `@primuslabs/zktls-js-sdk`, rather than the Primus Network DApp SDK `@primuslabs/network-js-sdk`.
+This app uses the **Primus enterprise zkTLS SDK** `@primuslabs/zktls-js-sdk` (version range `^0.3.15`), rather than the Primus Network DApp SDK `@primuslabs/network-js-sdk`.
 
 - Browser: initialises the SDK using the public App ID, constructs the request for the selected template, calls the server signing endpoint, completes the extension-based attestation and verifies the returned Primus signature.
 - Server: uses `ZKTLS_APP_ID` and `ZKTLS_APP_SECRET` to sign the request. The App Secret never reaches the browser.
