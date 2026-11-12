@@ -1,0 +1,28 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/primus/config"
+  to = "/.netlify/functions/primus-config"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/primus/sign"
+  to = "/.netlify/functions/primus-sign"
+  status = 200
+  force = true
