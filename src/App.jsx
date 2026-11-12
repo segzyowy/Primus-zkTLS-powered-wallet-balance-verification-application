@@ -23,7 +23,7 @@ const BINANCE_TEMPLATES = {
   trades: {
     key: "trades",
     icon: BINANCE_ICON,
-    title: "7-Day Spot Trade History",
+    title: "Spot Trade History",
     description: "Verify the user’s 30-day spot trade history on Binance.",
     templateId: "c25c9f6a-b816-4a67-86ab-7292eff209a3",
     sourceUrl: "https://www.binance.com/en/my/orders/exchange/usertrade",
@@ -39,6 +39,7 @@ export default function App() {
   const [sdkReady, setSdkReady] = useState(false);
   const [sdkError, setSdkError] = useState("");
   const [selectedBinanceTemplateKey, setSelectedBinanceTemplateKey] = useState(null);
+  const [binancePageOpened, setBinancePageOpened] = useState(false);
   const [primusBusy, setPrimusBusy] = useState(false);
   const [primusStep, setPrimusStep] = useState("");
   const [primusResult, setPrimusResult] = useState(null);
@@ -80,6 +81,10 @@ export default function App() {
     const selectedTemplate = selectedBinanceTemplateKey ? BINANCE_TEMPLATES[selectedBinanceTemplateKey] : null;
     if (!selectedTemplate) {
       setPrimusError("Choose a Binance template first.");
+      return;
+    }
+    if (!binancePageOpened) {
+      setPrimusError("First open Binance and sign in. Return here, then select Verify trading history.");
       return;
     }
     const primus = primusRef.current;
@@ -160,7 +165,7 @@ export default function App() {
     <section className="workspace">
       <section className="card form-card binance-pnl-card">
         {selectedTemplate ? <>
-          <button className="template-back-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(null); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
+          <button className="template-back-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(null); setBinancePageOpened(false); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
             <ArrowLeft size={15}/> Back
           </button>
           <div className="binance-template-heading">
@@ -172,10 +177,30 @@ export default function App() {
             </div>
           </div>
 
+          <div className="binance-connect-step">
+            <div className="binance-connect-copy">
+              <strong>{binancePageOpened ? "Binance page opened" : "Connect your Binance account"}</strong>
+              <span>{binancePageOpened
+                ? "Sign in on the Binance tab if prompted, then return here to verify."
+                : "Open Binance in a new tab and sign in. Your password stays with Binance."}</span>
+            </div>
+            <a
+              className="binance-connect-btn"
+              href={selectedTemplate.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setBinancePageOpened(true)}
+            >
+              {binancePageOpened ? "Open Binance again" : "Connect Binance"} <ArrowUpRight size={14}/>
+            </a>
+          </div>
+
           <div className="template-try-row">
             <span className="template-status"><ShieldCheck size={14}/> {sdkReady ? "Primus ready" : "Initialising Primus…"}</span>
-            <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !sdkReady}>
-              {primusBusy ? <><span className="spinner"/> {primusStep || "Verifying…"}</> : <>Try <ArrowUpRight size={15}/></>}
+            <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !sdkReady || !binancePageOpened}>
+              {primusBusy
+                ? <><span className="spinner"/> {primusStep || "Verifying…"}</>
+                : <>{selectedTemplate.key === "trades" ? "Verify trading history" : "Verify PnL rate"} <ArrowUpRight size={15}/></>}
             </button>
           </div>
 
@@ -193,13 +218,13 @@ export default function App() {
 
           <div className="primus-disclaimer">
             <LockKeyhole size={15}/>
-            <p>Sign in to Binance in this same browser and open the page for this template before selecting Try. The Primus extension reads the configured Binance response. This version does not request wallet access, wallet signatures, blockchain transactions or gas. The attestation uses a neutral recipient identifier and is not bound to a connected wallet.</p>
+            <p>Open Binance using Connect Binance, sign in if prompted, then return here and select Verify trading history. The Primus browser extension generates an attestation for the configured Binance response using your authenticated browser session. This app never asks for your Binance password, wallet access, wallet signatures, blockchain transactions or gas.</p>
           </div>
           {primusStep && <div className="primus-progress" role="status"><span className={primusBusy ? "spinner" : "primus-progress-check"}>{primusBusy ? "" : "✓"}</span>{primusStep}</div>}
           {sdkError && <div className="error-box" role="alert">{sdkError}</div>}
           {primusError && <div className="error-box" role="alert">{primusError} <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Get Primus extension</a></div>}
           <p className="primus-hint">The Primus browser extension is required. <a href="https://chromewebstore.google.com/detail/primus-prev-pado/oeiomhmbaapihbilkfkhmlajkeegnjhe" target="_blank" rel="noreferrer">Install extension</a>.</p>
-          <p className="primus-hint">The app displays the configured <code>{selectedTemplate.dataKey}</code> field at <code>{selectedTemplate.jsonPath}</code> exactly as returned. It does not infer or convert the source value.</p>
+          <p className="primus-hint">The app displays the configured <code>{selectedTemplate.dataKey}</code> field at <code>{selectedTemplate.jsonPath}</code> exactly as returned. It does not infer or convert the source value. For trade history, this is the response returned by Binance for the signed-in account session.</p>
         </> : <>
           <div className="template-list-heading">
             <span className="template-eyebrow">PRIMUS DEVELOPER HUB TEMPLATES</span>
@@ -219,7 +244,7 @@ export default function App() {
                 <span>Template ID</span><code>{template.templateId}</code>
                 <span>Data item</span><strong>{template.dataKey}</strong>
               </div>
-              <button className="secondary-btn template-open-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(template.key); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
+              <button className="secondary-btn template-open-btn" type="button" onClick={() => { setSelectedBinanceTemplateKey(template.key); setBinancePageOpened(false); setPrimusResult(null); setPrimusError(""); setPrimusStep(""); }}>
                 View template <ArrowUpRight size={13}/>
               </button>
             </article>
@@ -238,17 +263,17 @@ export default function App() {
               ? <strong>{String(primusResult.value)}</strong>
               : <pre>{JSON.stringify(primusResult.value, null, 2)}</pre>}
           </div>
-          <div className="balance-lines"><div><span>Data source</span><b>Binance Spot</b></div><div><span>JSONPath</span><b>{primusResult.jsonPath}</b></div><div><span>Recipient</span><b>Neutral identifier (no wallet)</b></div><div><span>Verification</span><b>Primus signature verified</b></div></div>
+          <div className="balance-lines"><div><span>Data source</span><b>Binance Spot</b></div><div><span>JSONPath</span><b>{primusResult.jsonPath}</b></div><div><span>Account access</span><b>Authenticated Binance browser session</b></div><div><span>Verification</span><b>Primus signature verified</b></div></div>
           {primusResult.attestedAt && <div className="proof-meta"><div><span>Attestation timestamp</span><b>{String(primusResult.attestedAt)}</b></div></div>}
-          <div className="boundary verified"><ShieldCheck size={16}/><span>The Primus signature passed local verification. The result shows the selected template field as returned; it is not linked to a connected wallet or on-chain transaction.</span></div>
+          <div className="boundary verified"><ShieldCheck size={16}/><span>The Primus signature passed local verification. This verifies the configured response obtained from the Binance browser session; it is not a legal identity check or an on-chain transaction.</span></div>
           <span className="primus-data-label">FULL ATTESTED TEMPLATE RESPONSE</span>
           <pre>{JSON.stringify(primusResult.data ?? {}, null, 2)}</pre>
-          <button className="secondary-btn reset-btn" type="button" onClick={() => { setPrimusResult(null); setPrimusError(""); }}><ArrowDownToLine size={15}/> Try again</button>
+          <button className="secondary-btn reset-btn" type="button" onClick={() => { setPrimusResult(null); setPrimusError(""); }}><ArrowDownToLine size={15}/> {primusResult.templateKey === "trades" ? "Verify again" : "Run verification again"}</button>
         </div> : selectedTemplate ? <div className="empty-state">
           <div className="empty-icon"><img src={BINANCE_ICON} alt="Binance" /></div>
           <span className="step-label">02 — BINANCE TEMPLATE RESULT</span>
           <h2>Your attested data will appear here</h2>
-          <p>Sign in to Binance in this browser, then select Try to generate the Primus zkTLS attestation.</p>
+          <p>Select Connect Binance, sign in to your account in the new tab, then return here and select Verify trading history to generate the Primus zkTLS attestation.</p>
           <div className="result-skeleton"><span/><span/><span/></div>
           <div className="boundary"><CircleHelp size={16}/><span>The selected template returns the configured field at {selectedTemplate.jsonPath}. The app displays the attested value after local signature verification.</span></div>
         </div> : <div className="empty-state">
