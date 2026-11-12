@@ -99,11 +99,25 @@ export default function App() {
       const signResponse = await fetch("/api/primus/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signParams })
+        body: JSON.stringify({ signParams }),
+        cache: "no-store"
       });
-      const signData = await signResponse.json();
-      if (!signResponse.ok || !signData.signResult) {
-        throw new Error(signData.error || "The server could not sign the Primus request.");
+      const signResponseText = await signResponse.text();
+      let signData;
+      try {
+        signData = JSON.parse(signResponseText);
+      } catch {
+        const contentType = signResponse.headers.get("content-type") || "unknown content type";
+        throw new Error(`Primus signing endpoint returned a non-JSON response (HTTP ${signResponse.status}, ${contentType}). Check the Netlify function deployment and logs.`);
+      }
+      if (!signResponse.ok) {
+        const detail = signData.error || signData.message || `Netlify returned HTTP ${signResponse.status}.`;
+        const code = signData.code ? ` [${signData.code}]` : "";
+        throw new Error(`Primus signing failed${code}: ${detail}`);
+      }
+      if (typeof signData.signResult !== "string" || !signData.signResult.trim()) {
+        const fields = Object.keys(signData || {}).join(", ") || "none";
+        throw new Error(`Netlify signing function returned HTTP ${signResponse.status} without a signature. Response fields: ${fields}. Check the Netlify function logs and confirm the production environment variables are available to Functions.`);
       }
 
       setPrimusStep("Running zkTLS verification in the Primus extension");
