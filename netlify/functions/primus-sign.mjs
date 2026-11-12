@@ -17,7 +17,8 @@ export default async function handler(request) {
   const appSecret = process.env.ZKTLS_APP_SECRET;
   if (!appId || !appSecret) {
     return json({
-      error: "Primus is not configured for this Netlify site. Add ZKTLS_APP_ID and ZKTLS_APP_SECRET under Site configuration → Environment variables, then redeploy."
+      code: "PRIMUS_CREDENTIALS_MISSING",
+      error: "Netlify Functions cannot see both ZKTLS_APP_ID and ZKTLS_APP_SECRET. Check that both are enabled for Production and the Functions scope, then redeploy."
     }, 503);
   }
 
@@ -41,9 +42,21 @@ export default async function handler(request) {
     return json({ signResult });
   } catch (error) {
     const message = error?.message || "Primus could not sign the attestation request.";
-    const status = /invalid|match|enabled|neutral recipient|expired|unsupported/i.test(message) ? 400 : 502;
-    // Do not log secrets, sign parameters, or signed payloads.
-    console.error("[primus-sign] request signing failed");
-    return json({ error: message }, status);
+    const isRequestError = /invalid|match|enabled|neutral recipient|expired|unsupported/i.test(message);
+    const invalidSecret = /invalid private key|invalid hex|invalid arrayify|invalid argument.*key/i.test(message);
+    const code = invalidSecret
+      ? "PRIMUS_APP_SECRET_INVALID_FORMAT"
+      : /App ID does not match/i.test(message)
+        ? "PRIMUS_APP_ID_MISMATCH"
+        : isRequestError
+          ? "PRIMUS_REQUEST_REJECTED"
+          : "PRIMUS_SIGNING_RUNTIME_ERROR";
+    const status = isRequestError ? 400 : 502;
+    // Log only classified diagnostics; never log credentials, signParams, or signed payloads.
+    console.error("[primus-sign] failed", { code, errorName: error?.name || "Error" });
+    const publicMessage = invalidSecret
+      ? "The App Secret could not be used as a signing key. Re-copy the App Secret from the same Primus project; do not include quotes or extra spaces."
+      : message;
+    return json({ code, error: publicMessage }, status);
   }
 }
