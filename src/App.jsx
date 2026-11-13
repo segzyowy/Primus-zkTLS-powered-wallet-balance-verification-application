@@ -164,15 +164,15 @@ export default function App() {
 
   return <main className="shell">
     <header className="topbar">
-      <a className="brand" href="#top" aria-label="Proof of Balance home"><span className="brand-mark"><ShieldCheck size={19}/></span><span>proof<span className="brand-dot">.</span></span></a>
-      <a className="top-link" href="https://github.com/segzyowy/proof-of-balance" target="_blank" rel="noreferrer">Open source <ArrowUpRight size={15}/></a>
+      <a className="brand" href="#top" aria-label="Verrify home"><span className="brand-mark"><ShieldCheck size={19}/></span><span>Verrify<span className="brand-dot">.</span></span></a>
+      <a className="top-link" href="https://github.com/segzyowy/proof-of-balance" target="_blank" rel="noreferrer">Project repository <ArrowUpRight size={15}/></a>
     </header>
 
     <section className="hero" id="top">
-      <div className="eyebrow"><span className="pulse"/> BINANCE · PRIMUS ZKTLS</div>
-      <h1>Your account.<br/><span>Your proof.</span></h1>
-      <p className="intro">Verify your Binance Spot account PnL rate or trade history using Primus zkTLS, without connecting a crypto wallet or paying blockchain gas.</p>
-      <div className="trust-row"><span><ShieldCheck size={16}/> Primus signature verification</span><i/><span>No wallet connection</span><i/><span>No on-chain gas</span></div>
+      <div className="eyebrow"><span className="pulse"/> BINANCE SPOT · VERIFIED BY PRIMUS</div>
+      <h1>Proof for your<br/><span>Binance activity.</span></h1>
+      <p className="intro">Verify your Spot PnL rate or trade history using authenticated Binance webpage data and Primus zkTLS. Your browser session does the proving — no API keys, wallet connection or gas required.</p>
+      <div className="trust-row"><span><ShieldCheck size={16}/> Signature checked locally</span><i/><span>No Binance API key</span><i/><span>No wallet or gas</span></div>
     </section>
 
     <section className="workspace">
@@ -191,7 +191,7 @@ export default function App() {
           </div>
 
           <div className="template-try-row">
-            <span className="template-status"><ShieldCheck size={14}/> {sdkReady ? "Primus extension connected" : "Initialising Primus…"}</span>
+            <span className="template-status"><ShieldCheck size={14}/> {sdkReady ? "Primus ready" : "Initialising Primus…"}</span>
             <button className="primus-action-btn template-try-btn" type="button" onClick={startPrimusAttestation} disabled={primusBusy || !sdkReady}>
               {primusBusy
                 ? <><span className="spinner"/> {primusStep || "Verifying…"}</>
@@ -222,9 +222,9 @@ export default function App() {
           <p className="primus-hint">The app displays the configured <code>{selectedTemplate.dataKey}</code> field at <code>{selectedTemplate.jsonPath}</code> exactly as returned. It does not infer or convert the source value. This is the response returned by Binance for the signed-in account session.</p>
         </> : <>
           <div className="template-list-heading">
-            <span className="template-eyebrow">PRIMUS DEVELOPER HUB TEMPLATES</span>
-            <h2>Binance verification templates</h2>
-            <p>Choose the Binance Spot data you want to verify.</p>
+            <span className="template-eyebrow">STEP 01 · CHOOSE YOUR DATA</span>
+            <h2>What would you like to verify?</h2>
+            <p>Select a verified Binance Spot data template to get started.</p>
           </div>
           {Object.values(BINANCE_TEMPLATES).map(template => (
             <article className="binance-template-option" key={template.key}>
@@ -281,7 +281,19 @@ export default function App() {
         </div>}
       </section>
     </section>
-    <footer><span>Built for transparent verification.</span><span>Primus enterprise zkTLS <i/> Binance Spot templates</span></footer>
+    <section className="how-it-works" aria-labelledby="how-title">
+      <div className="section-heading">
+        <span className="template-eyebrow">A SIMPLE, TRANSPARENT FLOW</span>
+        <h2 id="how-title">From your Binance session to verifiable evidence</h2>
+        <p>Verrify helps you inspect exactly what was attested, without asking you to hand over account credentials.</p>
+      </div>
+      <div className="steps-grid">
+        <article className="how-step"><span className="how-step-number">01</span><h3>Choose a template</h3><p>Select 7-day Spot PnL or Spot trade history. Each template defines the Binance response field to be checked.</p></article>
+        <article className="how-step"><span className="how-step-number">02</span><h3>Approve the capture</h3><p>The Primus extension opens its own Binance data-source tab and captures the requested response from your signed-in session.</p></article>
+        <article className="how-step"><span className="how-step-number">03</span><h3>Review the proof</h3><p>Verrify checks the Primus attestation signature and displays the configured value and returned data.</p></article>
+      </div>
+    </section>
+    <footer><span>© 2026 Verrify · Built for transparent verification.</span><span>Powered by Primus zkTLS <i/> Binance Spot templates</span></footer>
   </main>;
 }
 
