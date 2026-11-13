@@ -43,6 +43,12 @@ export default async function handler(request) {
     return json({ signResult });
   } catch (error) {
     const message = error?.message || "Primus could not sign the attestation request.";
+    // Return useful SDK diagnostics while stripping credentials and key-like values.
+    const diagnosticMessage = String(message)
+      .replaceAll(appSecret, "[REDACTED_APP_SECRET]")
+      .replaceAll(appId, "[CONFIGURED_APP_ID]")
+      .replace(/0x[0-9a-fA-F]{64}/g, "[REDACTED_KEY]")
+      .slice(0, 500);
     const errorCode = String(error?.code || "");
     const invalidSecret =
       /invalid private key|invalid hex|invalid arrayify|invalid argument.*key/i.test(message) ||
@@ -67,7 +73,8 @@ export default async function handler(request) {
     console.error("[primus-sign] failed", {
       code,
       errorName: error?.name || "Error",
-      errorCode: errorCode || undefined
+      errorCode: errorCode || undefined,
+      diagnosticMessage
     });
 
     const publicMessage = invalidSecret
@@ -77,8 +84,8 @@ export default async function handler(request) {
         : isModuleError
           ? "Netlify could not load the Primus SDK module. Check the function bundle and deployment logs."
           : isRequestError
-            ? message
-            : "The Primus SDK failed while signing the request. Open Netlify Logs & Metrics → Functions → primus-sign for the invocation details.";
+            ? diagnosticMessage
+            : diagnosticMessage || "The Primus SDK failed while signing the request. Open Netlify Logs & Metrics → Functions → primus-sign for the invocation details.";
 
     return json({ code, error: publicMessage }, status);
   }
