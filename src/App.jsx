@@ -111,8 +111,12 @@ export default function App() {
         throw new Error(`Primus signing endpoint returned a non-JSON response (HTTP ${signResponse.status}, ${contentType}). Check the Netlify function deployment and logs.`);
       }
       if (!signResponse.ok) {
-        const detail = signData.error || signData.message || `Netlify returned HTTP ${signResponse.status}.`;
         const code = signData.code ? ` [${signData.code}]` : "";
+        const responseSummary = JSON.stringify(signData || {}).slice(0, 500);
+        const fallback = responseSummary && responseSummary !== "{}"
+          ? `Netlify returned HTTP ${signResponse.status}. Response: ${responseSummary}`
+          : `Netlify returned HTTP ${signResponse.status} with no diagnostic body. Check the production function deployment and invocation logs.`;
+        const detail = signData.error || signData.message || fallback;
         throw new Error(`Primus signing failed${code}: ${detail}`);
       }
       if (typeof signData.signResult !== "string" || !signData.signResult.trim()) {
