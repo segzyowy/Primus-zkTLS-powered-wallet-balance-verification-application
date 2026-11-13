@@ -1,6 +1,6 @@
-# Proof of Balance
+# Verrify
 
-A Binance Spot verification app with two Primus zkTLS templates:
+Verrify is a Binance Spot verification app with two Primus zkTLS templates:
 
 1. **7-Day Spot Account PnL Rate**
 2. **Spot Trade History**
@@ -83,7 +83,7 @@ ZKTLS_APP_ID=your_primus_app_id
 ZKTLS_APP_SECRET=your_primus_app_secret
 ```
 
-For Cloudflare Workers, add both under **Workers & Pages → proof-of-balance → Settings → Variables and Secrets** as encrypted secrets. The app returns only the public App ID to the browser. Never expose or commit the App Secret.
+For Cloudflare Workers, add both under **Workers & Pages → verrify → Settings → Variables and Secrets** as encrypted secrets. The app returns only the public App ID to the browser. Never expose or commit the App Secret.
 
 For local development, copy `.env.example` to `.env` and fill in the same two values.
 
@@ -122,17 +122,17 @@ The old public-wallet lookup and server-side Binance API-key balance routes have
 - The Binance source pages are account-specific and require the user to be signed in to Binance in the same browser.
 
 
-## Deploy to Netlify (Veriffy)
+## Deploy to Netlify (Verrify)
 
 The Netlify deployment uses Netlify Functions for the private Primus signing API. A static-site deployment alone is not enough because the App Secret must remain on the server.
 
-1. In Netlify, connect the `segzyowy/proof-of-balance` GitHub repository and use branch `main`.
+1. In Netlify, connect the `segzyowy/verrify` GitHub repository and use branch `main`.
 2. Set the build command to `npm run build` and publish directory to `dist`. The included `netlify.toml` supplies these settings and routes `/api/*` to Netlify Functions.
 3. In **Site configuration → Environment variables**, add these two variables for the production deploy context:
    - `ZKTLS_APP_ID` — the App ID from your Primus Developer Hub project.
    - `ZKTLS_APP_SECRET` — the App Secret from the same Primus project.
 4. Save the variables, then trigger a new production deploy from **Deploys → Trigger deploy → Deploy site**. Netlify Functions receive environment variables at runtime only after a deploy that includes them.
-5. Open `https://veriffy.netlify.app/api/health`. Confirm it returns `"primusConfigured": true`.
+5. Open `https://verrify.netlify.app/api/health`. Confirm it returns `"primusConfigured": true`.
 
 Do not prefix these names with `VITE_` or `NEXT_PUBLIC_`. Do not put the App Secret in frontend code, GitHub, or a committed `.env` file. You do not need Cloudflare Worker secrets for the Netlify deployment; configure the Netlify site's environment variables instead.
 
