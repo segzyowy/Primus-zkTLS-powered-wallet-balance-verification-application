@@ -13,7 +13,7 @@ export default async function handler(request) {
 
   return json({
     ok: true,
-    app: "veriffy",
+    app: "verrify",
     primusConfigured: Boolean(process.env.ZKTLS_APP_ID && process.env.ZKTLS_APP_SECRET),
     walletIntegration: false
   });
