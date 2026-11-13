@@ -284,3 +284,81 @@ footer i{background:#c4b8ac}
 .trade-history-value{margin:20px 0 10px;padding:16px;border:1px solid #ece4da;border-radius:9px;background:#faf7f2}
 .trade-history-value>span{display:block;margin-bottom:9px;color:#82776e;font-size:11px}
 .trade-history-value pre{max-height:220px;overflow:auto;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:#332a23;font:10px/1.55 'DM Mono',monospace}
+
+
+/* Verrify product polish */
+:root{
+  --brand-orange:#f4510b;
+  --brand-ink:#211b16;
+  --brand-muted:#786e64;
+  --brand-line:#e9e0d7;
+}
+.shell{max-width:1220px;padding-left:clamp(18px,4vw,42px);padding-right:clamp(18px,4vw,42px)}
+.topbar{height:82px}
+.brand{gap:12px;font-size:20px;letter-spacing:-.9px}
+.brand-mark{width:38px;height:38px;border-radius:12px}
+.top-link{padding:10px 13px;border:1px solid #e8ded3;border-radius:999px;background:rgba(255,255,255,.68);font-weight:700;transition:all .18s ease}
+.top-link:hover{border-color:#f4b18f;background:#fff5ed;transform:translateY(-1px)}
+.hero{margin-top:28px;margin-bottom:30px;padding:clamp(34px,5vw,58px);border-radius:22px;min-height:300px;display:flex;flex-direction:column;justify-content:center}
+.hero h1{max-width:760px;line-height:1.02;font-size:clamp(42px,6.2vw,72px);letter-spacing:-3.8px}
+.hero .intro{font-size:clamp(14px,1.5vw,17px);max-width:660px;line-height:1.75}
+.trust-row{margin-top:28px;gap:16px;font-size:11px}
+.workspace{grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);gap:22px;align-items:start}
+.card{border-radius:18px}
+.form-card,.result-card{padding:clamp(20px,2.5vw,30px)}
+.binance-pnl-card{gap:18px}
+.template-list-heading{padding:2px 0 8px}
+.template-list-heading h2{font-size:24px;line-height:1.2;margin:8px 0}
+.template-list-heading p{font-size:13px}
+.binance-template-option{padding:18px;border-radius:14px;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.binance-template-option:hover{transform:translateY(-2px);border-color:#f1b99b;box-shadow:0 10px 24px rgba(72,42,21,.06)}
+.binance-template-option-head h3{font-size:15px}
+.binance-template-option-head p{font-size:12px}
+.binance-option-logo{width:46px;height:46px;border-radius:13px}
+.binance-template-option-meta{margin:16px 0}
+.template-open-btn{min-height:42px;border-radius:9px;font-weight:700}
+.secondary-btn,.template-back-btn{transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.secondary-btn:hover,.template-back-btn:hover{transform:translateY(-1px)}
+.template-try-row{padding:14px;border-radius:12px;gap:14px}
+.template-try-btn{min-height:45px;min-width:150px;border-radius:9px}
+.template-status{font-size:11px}
+.template-details{padding:18px;border-radius:12px}
+.template-details h3{font-size:14px}
+.primus-disclaimer{padding:14px;border-radius:10px;line-height:1.65}
+.primus-disclaimer p{font-size:11px;line-height:1.7}
+.primus-hint{font-size:11px;line-height:1.65}
+.result-card{min-height:540px}
+.empty-state{padding-top:30px}
+.empty-icon{width:54px;height:54px;border-radius:16px}
+.empty-state h2{font-size:23px;letter-spacing:-.5px}
+.empty-state>p{font-size:13px;line-height:1.75}
+.boundary{font-size:11px;padding:14px;border-radius:10px}
+.proof-result{gap:2px}
+.proof-result .result-top h2{line-height:1.25}
+.how-it-works{margin:44px 0 8px;padding:30px 0 8px;border-top:1px solid #e5ddd3}
+.section-heading{max-width:650px;margin-bottom:20px}
+.section-heading h2{margin:8px 0;color:#211b16;font:800 clamp(22px,3vw,30px)/1.2 Manrope,sans-serif;letter-spacing:-.9px}
+.section-heading p{margin:0;color:#80746a;font-size:13px;line-height:1.7}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.how-step{position:relative;min-height:168px;padding:20px;border:1px solid #e8ded3;border-radius:14px;background:rgba(255,255,255,.72)}
+.how-step-number{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;border:1px solid #ffd0b8;border-radius:10px;background:#fff1e8;color:#e84a07;font:700 10px 'DM Mono',monospace}
+.how-step h3{margin:15px 0 7px;color:#211b16;font:700 15px Manrope,sans-serif}
+.how-step p{margin:0;color:#80746a;font-size:11px;line-height:1.7}
+footer{border-top:1px solid #e5ddd3;margin-top:30px;padding-top:22px;gap:16px;line-height:1.6}
+@media(max-width:800px){
+  .workspace{grid-template-columns:1fr}
+  .result-card{min-height:390px}
+}
+@media(max-width:640px){
+  .topbar{height:70px}
+  .top-link{font-size:11px;padding:8px 10px}
+  .hero{min-height:0;margin:20px 0;padding:32px 23px;border-radius:17px}
+  .hero h1{letter-spacing:-2.5px}
+  .trust-row{gap:10px;line-height:1.5}
+  .steps-grid{grid-template-columns:1fr}
+  .how-step{min-height:0;padding:17px}
+  footer{flex-direction:column;gap:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
