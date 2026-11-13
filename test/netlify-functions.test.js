@@ -26,7 +26,7 @@ test("Netlify functions expose health but never expose secrets", async () => {
     const healthData = await healthResponse.json();
     assert.equal(healthResponse.status, 200);
     assert.equal(healthData.ok, true);
-    assert.equal(healthData.app, "veriffy");
+    assert.equal(healthData.app, "verrify");
     assert.equal(healthData.primusConfigured, false);
     assert.equal(healthData.walletIntegration, false);
     assert.equal(Object.hasOwn(healthData, "appSecret"), false);
